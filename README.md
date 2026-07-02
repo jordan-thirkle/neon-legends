@@ -25,6 +25,7 @@ Drag-and-drop `index.html` into any modern browser to play immediately.
 - Liveops: rotate events weekly; add limited banners with stronger legendary rates.
 - UA: launch clips, creator codes, referral bonus, in-game tweet prompt.
 - Monitoring: analytics events for purchase, ad impression, retention day-1/7/30.
+- Governance: review legal for IAP disclosure, privacy policy, cookie consent before store submission.
 
 ### License / attribution notes
 - Icons are generic Unicode glyphs; replace with licensed sprites before store submission if needed.
@@ -33,3 +34,4 @@ Drag-and-drop `index.html` into any modern browser to play immediately.
 - **Genre:** Idle RPG, Gacha Lite
 - **Session length:** 90-180s active, 4-8h idle
 - **Retention hooks:** first-pull experience, daily rewards, offline earnings, battle pass
+- **Monetization:** IAP $0.49-$4.99, rewarded video, promo items, no-ads IAP, battle pass
