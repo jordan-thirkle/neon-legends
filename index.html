@@ -69,6 +69,9 @@
       <button class="btn" id="basicPull">🎰 Basic Pull (100⚡)</button>
       <button class="btn" style="background:linear-gradient(135deg,#f59e0b,#ef4444)" id="premiumPull">💎 Premium (10💎)</button>
     </div>
+    <div style="margin-top:8px">
+      <button class="btn btn-ghost" id="watchAd">🎬 Watch Ad → +5💎</button>
+    </div>
     <div style="font-size:11px;color:rgba(255,255,255,0.5)">Pity: <span id="pityCount">0</span>/10 · Next guaranteed: <span id="pityProgress">0</span>%</div>
   </div>
 </div>
@@ -95,6 +98,14 @@
 <div id="events" class="tab-panel" style="display:none">
   <div class="section-title">Active Events</div>
   <div class="list" id="eventList"></div>
+  <div class="section-title">Social</div>
+  <div class="list" style="padding:0 12px 80px">
+    <div class="item">
+      <div class="icon">🐦</div>
+      <div class="meta"><div class="title">Share on X</div><div class="desc">Post your squad and earn 50⚡</div></div>
+      <div class="action"><button class="btn btn-sm btn-ghost" onclick="window.open('https://x.com/intent/post?text='+encodeURIComponent('I just pulled a rare hero in Neon Legends! ⚡ Try: ')+encodeURIComponent(location.href))">Share</button></div>
+    </div>
+  </div>
 </div>
 
 <div id="guild" class="tab-panel" style="display:none">
