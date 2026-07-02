@@ -58,10 +58,8 @@
     {id:'double_gems',name:'Gem Mirage',desc:'+100% gem gains for 6h',duration:6*60*60*1000,active:true},
     {id:'hero_fest',name:'Hero Fest',desc:'+70% rare+ hero rate',duration:72*60*60*1000,active:true},
   ];
-  const LIMITED_BANNER={id:'lunar_spark',name:'Lunar Spark Banner',desc:'Mythic chance x3 for 24h',endsAt:Date.now()+24*60*60*1000,active:true};
 
   let save = load();
-  if(save.firstRun || !save.owned){ giveHero('ember','common'); save.owned=true; save.firstRun=false; save.heroes[0].owned=true; save.squad[0]='ember'; persist();}
 
   function load(){
     try{ const raw=localStorage.getItem(STORAGE_KEY); return raw?JSON.parse(raw):fresh();}catch(e){return fresh();}
@@ -72,22 +70,18 @@
       heroes:[],squad:[],owned:false,pity:0,pulls:0,passLvl:1,passXp:0,claimedToday:false,lastDaily:null,streak:0,
       achievements:{},settings:{sound:true,music:true,notif:true},firstRun:true,offlineEarningsShown:false,
       eventProgress:{clicks:0,spend:0},skins:{},skinEquipped:{}};
-  }
 
   /* boss calc */
   function currentBoss(){ const idx=save.stage%BOSSES.length; const ch=Math.floor(save.stage/7)+1; const boss={...BOSSES[idx]}; const scale=Math.pow(1.22,save.stage); boss.hp=Math.floor(boss.hp*scale); boss.atk=Math.floor(boss.atk*scale); boss.gold=Math.floor(boss.gold*scale); boss.maxHp=boss.hp; boss.chapter=ch; return boss; }
   function squadPower(){ const sq=save.squad.slice(0,4); if(!sq.length) return 1; let power=0; sq.forEach(key=>{ const h=save.heroes.find(x=>x.key===key); if(!h) return; const base=HERO_TEMPLATES.find(t=>t.key===key.split('_')[0]); if(!base) return; const lvl=h.level||1; const rarityMul = {common:1,rare:1.4,epic:1.9,legendary:2.7,mythic:3.5}; const multi = rarityMul[h.rarity]||1; const atk = base.atkGrowth*5*lvl*multi; const hp = base.hpGrowth*20*lvl*multi; power += atk; }); const activeBonus = (currentBoss()?.chapter||1) >= 4 ? 1.25 : 1; return Math.max(1,power*activeBonus); }
   function remainingEnergy(){ const now=Date.now(); const diff=now-save.energyTs; const regen=Math.floor(diff/1000); if(regen>0){ save.energy=Math.min(save.maxEnergy,save.energy+regen); save.energyTs=now; persist();} return save.energy; }
-  function energyRefillAt(){ const now=Date.now(); const diffMs=Math.max(0,(save.maxEnergy-save.energy)*1000 - (now-save.energyTs)); return diffMs; }
 
   /* hero generation */
   function rollHero(){ save.pity++; let pool=['mythic']; if(save.pity>=10){ pool.push('mythic','legendary'); } const total=RARITY_WEIGHTS[Object.keys(RARITY_WEIGHTS).reduce((a,b)=>RARITY_WEIGHTS[a]+RARITY_WEIGHTS[b]>100?a:b)]; const sum=Object.values(RARITY_WEIGHTS).reduce((a,b)=>a+b,0); let r=Math.random()*sum, acc=0, rarity='common'; for(const [k,w] of Object.entries(RARITY_WEIGHTS)){ acc+=w; if(r<=acc){ rarity=k; break; } } if(EVENTS.find(e=>e.id==='hero_fest')?.active){ const reroll=Math.random(); if(reroll<0.6){ rarity='rare'; } if(reroll<0.9){ rarity='epic'; } } if(LIMITED_BANNER.active && Date.now()<LIMITED_BANNER.endsAt){ if(rarity==='legendary' || rarity==='mythic'){ if(Math.random()<0.75){ rarity='mythic'; } } } const templates=HERO_TEMPLATES; const t=templates[Math.floor(Math.random()*templates.length)]; return { key:t.key+'_'+Date.now()+'_'+Math.floor(Math.random()*9999), base:t.key, name:t.name, icon:t.icon, class:t.class, rarity, level:1, xp:0, owned:true }; }
-  function giveHero(baseKey,forcedRarity){ const t=HERO_TEMPLATES.find(x=>x.key===baseKey); if(!t) return; const h={key:t.key+'_'+Date.now(),base:t.key,name:t.name,icon:t.icon,class:t.class,rarity:forcedRarity||'common',level:1,xp:0,owned:true}; save.heroes.push(h); return h; }
 
   /* progression */
   function assignToSquad(key){ if(save.squad.length>=4) return notify('Squad full!'); save.squad.push(key); persist(); renderHeroes(); notify(`${HERO_TEMPLATES.find(t=>t.key===key.split('_')[0]).name} added`); }
   function unequipSquad(key){ save.squad=save.squad.filter(k=>k!==key); persist(); renderHeroes(); }
-  function levelUpHero(key){ const h=save.heroes.find(x=>x.key===key); if(!h) return; const cost=Math.floor(100*Math.pow(1.6,h.level-1)); if(save.gold<cost){ return notify('Not enough gold'); } save.gold-=cost; h.xp+=100; if(h.xp>=100){ h.level++; h.xp-=100; notify('Level up!'); renderHeroes(); } persist(); renderHud(); }
 
   /* summoning */
   function doPull(premium){
@@ -101,7 +95,6 @@
     const heroCountByRarity = {common:0,rare:0,epic:0,legendary:0,mythic:0}; results.forEach(h=>{ heroCountByRarity[h.rarity]=(heroCountByRarity[h.rarity]||0)+1; }); const best=Object.entries(heroCountByRarity).sort((a,b)=>['mythic','legendary','epic','rare','common'].indexOf(a[0])-['mythic','legendary','epic','rare','common'].indexOf(b[0]))[0];
     notify('Best: '+(best[0]||'common'));
     persist(); renderHeroes(); renderSummonResults(results); renderHud();
-  }
 
   /* Shop & Economy */
   function buyItem(item){
@@ -110,14 +103,11 @@
     if(item.type==='shard'){ const base=item.give.shard; if(save.heroes.some(h=>h.base===base)){ notify('Already owned'); return; } giveHero(base,'rare'); persist(); renderHeroes(); renderHud(); notify('Hero unlocked!'); return; }
     if(item.type==='no_ads'){ save.settings.noAds=true; persist(); notify('No ads enabled!'); renderShop(); return; }
     if(item.type==='promo'){ const rewardStart=item.reward; if(item.reward==='gems'){ save.gems+=item.amount; } else { save.gold+=item.amount; } persist(); renderShop(); renderHud(); notify('Promo redeemed!'); return; }
-  }
 
   /* Daily Rewards */
   function claimDaily(){ const now=new Date(); const today=now.toDateString(); if(save.lastDaily===today){ return notify('Already claimed today'); } save.lastDaily=today; save.streak=(save.streak||0)+1; const rewards=[{gold:100,gems:10},{gold:200,gems:5},{gold:300,gems:0,shard:'random'},{gold:400,gems:25},{gold:0,gems:50},{gold:600,gems:20},{gold:0,gems:100}]; const r=rewards[(save.streak-1)%rewards.length]||rewards[0]; if(r.gold) save.gold+=r.gold; if(r.gems) save.gems+=r.gems; if(r.shard==='random'){ const k=HERO_TEMPLATES[Math.floor(Math.random()*HERO_TEMPLATES.length)].key; if(!save.heroes.some(h=>h.base===k)) giveHero(k); } persist(); notify('Daily reward claimed!'); renderCalendar(); }
-  function renderCalendar(){ const c=$('#calendar'); if(!c) return; let html='<div style="display:flex;gap:6px;flex-wrap:wrap;margin:0 12px 80px">'; for(let i=1;i<=7;i++){ const claimed=(save.lastDaily?new Date(save.lastDaily).getDate():999)===i; html+=`<div class="card" style="flex:1;min-width:60px;text-align:center;padding:10px 6px"><div style="font-size:10px;color:rgba(255,255,255,0.5)">Day ${i}</div><div style="font-size:20px">${claimed?'✅':'🎁'}</div></div>`; } html+='</div>'; const list=$('#shopList'); if(list){ const cal=document.createElement('div'); cal.innerHTML=html; list.parentNode.insertBefore(cal,list.nextSibling); }}
 
   /* Achievements */
-  function checkAchievements(){ let changed=false; ACHIEVEMENTS.forEach(a=>{ if(!save.achievements[a.id] && a.check(save)){ save.achievements[a.id]=true; save.trophies++; notify('🏅 '+a.title); changed=true; }}); if(changed) persist(); renderHud(); renderAchievements(); }
 
   /* Battle / AFK */
   function attack(){
@@ -130,9 +120,7 @@
   function defeatBoss(){ const boss=currentBoss(); save.gold+=boss.gold; save.passXp+=10; save.stage++; notify('🏆 Boss defeated! +'+boss.gold+' gold'); save.bossHp=null; save.bossMaxHp=null; persist(); checkAchievements(); }
   function spawnDmg(dmg){ const bossArea=$('#bossArea'); const el=document.createElement('div'); el.className='dmg'; el.textContent='-'+dmg; bossArea.appendChild(el); setTimeout(()=>el.remove(),800); }
   function calcOffline(){ const updatesPerSecond=1; const now=Date.now(); const diffSec=Math.min(43200,Math.floor((now-(save.offlineTs||now))/1000)); if(diffSec>0){ const goldGain=Math.floor(diffSec*squadPower()*0.5); save.gold+=goldGain; save.offlineTs=now; persist(); return {seconds:diffSec,gold:goldGain}; } return {seconds:0,gold:0}; }
-  function formatTime(sec){ if(sec<60) return sec+'s'; if(sec<3600) return Math.floor(sec/60)+'m'; return Math.floor(sec/3600)+'h '+(Math.floor((sec%3600)/60))+'m'; }
 
-  function quickGacha(){ switchTab('summon'); const orb=$('#summonOrb'); if(!orb) return; orb.style.transform='scale(1.2)'; setTimeout(()=>{ if(save.attackCount===1){ /* first guaranteed rare */ const forcedRoll=function(){ const t=HERO_TEMPLATES[Math.floor(Math.random()*HERO_TEMPLATES.length)]; return { key:t.key+'_'+Date.now()+'_'+Math.floor(Math.random()*9999), base:t.key, name:t.name, icon:t.icon, class:t.class, rarity:'rare', level:1, xp:0, owned:true }; }; const h=forcedRoll(); save.heroes.push(h); save.pulls++; save.pity=0; renderSummonResults([h]); renderHeroes(); renderHud(); setTimeout(()=>{ save.heroes.forEach(h2=>{ if(!save.squad.includes(h2.key)) assignToSquad(h2.key); }); renderHeroes(); renderHud(); switchTab('campaign'); },900); } else { doPull(true); setTimeout(()=>{ save.heroes.forEach(h2=>{ if(!save.squad.includes(h2.key)) assignToSquad(h2.key); }); renderHeroes(); renderHud(); switchTab('campaign'); },1200); } },400); }
 
   /* UI */
   function switchTab(id){ $$('.tab-panel').forEach(p=>p.style.display='none'); const panel=$('#'+id); if(panel) panel.style.display=''; $$('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===id)); $$('#mainTabs .tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===id)); if(id==='heroes') renderHeroes(); if(id==='shop') renderShop(); if(id==='events') renderEvents(); if(id==='achievements') renderAchievements(); }
@@ -155,12 +143,11 @@
   }
   function renderSquad(){ const sl=$('#squadSlots'); if(!sl) return; sl.innerHTML='';
     for(let i=0;i<4;i++){ const key=save.squad[i]; const h=save.heroes.find(x=>x.key===key); const el=document.createElement('div'); el.style.cssText='width:60px;height:60px;border-radius:12px;background:rgba(124,58,237,0.1);display:flex;align-items:center;justify-content:center;font-size:26px;border:1px solid rgba(124,58,237,0.3)'; if(h){ const t=HERO_TEMPLATES.find(x=>x.key===h.base); el.textContent=t?t.icon:'?'; el.onclick=()=>unequipSquad(key); } else { el.textContent='+'; el.onclick=()=>{ notify('Open Heroes to add'); }; } sl.appendChild(el); }}
-  function renderShop(){ const list=$('#shopList'); if(!list) return; list.innerHTML=''; SHOP_ITEMS.forEach(item=>{ const el=document.createElement('div'); el.className='item'; el.innerHTML=`<div class="icon">${item.icon}</div><div class="meta"><div class="title">${item.name}</div><div class="desc">${item.desc}</div></div><div class="action"><button class="btn btn-sm">${item.currency==='usd'?'$'+item.price:'Claim'}</button></div>`; el.querySelector('button').onclick=()=>buyItem(item); list.appendChild(el); }); }
+  function renderShop(){ const list=$('#shopList'); if(!list) return; list.innerHTML=''; SHOP_ITEMS.forEach(item=>{ const el=document.createElement('div'); el.className='item'; el.innerHTML=`<div class="icon">${item.icon}</div><div class="meta"><div class="title">${item.name}</div><div class="desc">${item.desc}</div></div><div class="action"><button class="btn btn-sm">${item.currency==='usd'?'$'+item.price:item.price}</button></div>`; const btn=el.querySelector('button'); btn.onclick=()=>buyItem(item); if(item.type==='promo'||item.currency!=='usd') btn.classList.add('btn-ghost'); list.appendChild(el); }); }
   function renderSummon(){ }
   function renderSummonResults(results){ const res=$('#summonResult'); if(!res) return; res.innerHTML=''; results.forEach((h,i)=>{ const t=HERO_TEMPLATES.find(x=>x.key===h.base); setTimeout(()=>{ const el=document.createElement('div'); el.style.cssText='margin:10px auto;text-align:center'; el.innerHTML=`<div class="hero-portrait-large" style="border:2px solid ${RARITY_COLORS[h.rarity]||'#fff'};margin:0 auto">${t&&t.icon?t.icon:'?'}</div><div style="font-weight:700;margin-top:6px">${h?h.name:'?'}</div><div style="font-size:11px;color:${RARITY_COLORS[h.rarity]||'#aaa'};text-transform:uppercase">${h.rarity}</div>`; res.appendChild(el); },i*250+i*100); }); }
   function renderEvents(){ const list=$('#eventList'); if(!list) return; list.innerHTML=''; const limitLeft = LIMITED_BANNER.active && Date.now()<LIMITED_BANNER.endsAt ? Math.max(0,Math.floor((LIMITED_BANNER.endsAt-Date.now())/1000)) : 0; const all=[...EVENTS]; if(limitLeft>0) all.unshift(LIMITED_BANNER); all.forEach(ev=>{ const el=document.createElement('div'); el.className='item'; const timeLeft = ev.endsAt ? Math.max(0,Math.floor((ev.endsAt-Date.now())/1000)) : null; const desc=(ev.desc||'') + (timeLeft!=null ? ' · ends in '+timeLeft+'s' :''); el.innerHTML=`<div class="icon">${ev.id==='lunar_spark'?'🌙':'✨'}</div><div class="meta"><div class="title">${ev.name} ${ev.id==='lunar_spark'?'<span style="color:#fbbf24">LIMITED</span>':''}</div><div class="desc">${desc}</div></div><div class="action"><span style="font-size:11px;color:var(--green)">ACTIVE</span></div>`; list.appendChild(el); }); }
   function renderAchievements(){ const list=$('#achievementList'); if(!list) return; list.innerHTML=''; ACHIEVEMENTS.forEach(a=>{ const done=!!save.achievements[a.id]; const el=document.createElement('div'); el.className='item'; el.style.opacity=done?1:.5; el.innerHTML=`<div class="icon">${done?'🏅':'🥈'}</div><div class="meta"><div class="title">${a.title}</div><div class="desc">${a.desc}</div></div><div class="action"><button class="btn btn-sm ${done?'':'btn-ghost'}" ${done?'disabled':''}>${done?'Claim':'Locked'}</button></div>`; const btn=el.querySelector('button'); if(btn && !done){ btn.onclick=()=>{ save.achievements[a.id]=true; save.trophies+=10; persist(); renderHud(); renderAchievements(); notify('🏅 '+a.title); }; } list.appendChild(el); }); }
-  function renderCalendar(){ const c=$('#calendar'); if(!c) return; let html='<div style="display:flex;gap:6px;flex-wrap:wrap;margin:0 12px 80px">'; for(let i=1;i<=7;i++){ const claimed=(save.lastDaily?new Date(save.lastDaily).getDate():999)===i; html+=`<div class="card" style="flex:1;min-width:60px;text-align:center;padding:10px 6px"><div style="font-size:10px;color:rgba(255,255,255,0.5)">Day ${i}</div><div style="font-size:20px">${claimed?'✅':'🎁'}</div></div>`; } html+='</div>'; const list=$('#shopList'); if(list){ const cal=document.createElement('div'); cal.innerHTML=html; list.parentNode.insertBefore(cal,list.nextSibling); }}
 
   function notify(text){ const el=$('#notif'); el.textContent=text; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),1800); }
   window.game={
