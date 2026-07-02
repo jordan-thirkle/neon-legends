@@ -197,7 +197,7 @@
     $('#premiumPull').onclick=()=>doPull(true);
     $('#watchAd').onclick=()=>game.watchAd();
     $('#passClaim').onclick=()=>game.claimPass();
-    game.init();
+    const saveExport=$('#exportSave'); const saveImport=$('#importSave'); if(saveExport){ saveExport.onclick=()=>{ const blob=new Blob([JSON.stringify(save)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='neon-legends-save.json'; a.click(); }; } if(saveImport){ saveImport.onclick=()=>{ const input=document.createElement('input'); input.type='file'; input.accept='application/json'; input.onchange=e=>{ const file=e.target.files[0]; if(!file) return; const r=new FileReader(); r.onload=ev=>{ try{ save=JSON.parse(ev.target.result); persist(); notify('Save imported'); location.reload(); }catch(err){ notify('Invalid save'); }}; r.readAsText(file); }; input.click(); }; } game.init();
     if(save.attackCount===0){ const help=$('#helpToast'); if(help){ help.style.display=''; setTimeout(()=>help.style.display='none',6000); } }
     setInterval(()=>{ game.renderHud(); game.renderPass(); game.renderSummon(); game.renderEvents(); },1000);
     setInterval(()=>{ renderCampaign(); },1000);
