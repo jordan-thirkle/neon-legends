@@ -44,12 +44,13 @@
     {id:'first_ult',title:'Ultimate',desc:'Unleash an ultimate attack',check:s=>s.attackCount>=100},
   ];
   const SHOP_ITEMS=[
-    {id:'gem_pack_md',name:'Medium Gem Pack',desc:'500 gems',icon:'💎',price:4.99,currency:'usd',give:{gems:500},type:'gem'},
-    {id:'starter_pack',name:'Starter Pack',desc:'Gold + Hero shard',icon:'🎁',price:0.99,currency:'usd',give:{gold:2000,gems:50},type:'pack'},
-    {id:'starter_hero',name:'Hero Shard: Frost',desc:'Unlock Frost',icon:'❄️',price:1.99,currency:'usd',give:{shard:'frost'},type:'shard'},
-    {id:'no_ads',name:'Remove Ads',desc:'No more ad placeholders',icon:'🚫',price:2.99,currency:'usd',type:'no_ads'},
-    {id:'promo_100g',name:'Quick Gold',desc:'1000 gold promo',icon:'⚡',price:'Ad or $0.49',currency:'promo',give:{gold:1000},type:'promo'},
-    {id:'promo_20gems',name:'Gem sprinkle',desc:'20 gems promo',icon:'💎',price:'Ad',currency:'promo',give:{gems:20},type:'promo'},
+    {id:'gem_pack_sm',name:'Small Gem Pack',desc:'100 gems',icon:'💎',price:'$0.99',currency:'usd',give:{gems:100},type:'gem'},
+    {id:'gem_pack_md',name:'Medium Gem Pack',desc:'500 gems',icon:'💎',price:'$4.99',currency:'usd',give:{gems:500},type:'gem'},
+    {id:'starter_pack',name:'Starter Pack',desc:'Gold + Hero shard',icon:'🎁',price:'$0.99',currency:'usd',give:{gold:2000,gems:50},type:'pack'},
+    {id:'starter_hero',name:'Hero Shard: Frost',desc:'Unlock Frost',icon:'❄️',price:'$1.99',currency:'usd',give:{shard:'frost'},type:'shard'},
+    {id:'no_ads',name:'Remove Ads',desc:'No more ad placeholders',icon:'🚫',price:'$2.99',currency:'usd',type:'no_ads'},
+    {id:'promo_100g',name:'Quick Gold',desc:'1000 gold promo',icon:'⚡',price:'$0.49',currency:'promo',give:{gold:1000},type:'promo'},
+    {id:'promo_20gems',name:'Gem sprinkle',desc:'20 gems promo',icon:'💎',price:'Watch Ad',currency:'promo',give:{gems:20},type:'promo'},
   ];
   const EVENTS=[
     {id:'click_boom',name:'Click Surge',desc:'+200% attack power for 24h',duration:24*60*60*1000,active:true},
@@ -147,6 +148,7 @@
       const el=document.createElement('div'); el.className='hero-card rarity-'+rarityLabel; if(h.owned) el.classList.add('owned');
       el.innerHTML=`<div class="badge">${rarityLabel[0].toUpperCase()}</div><div>${t?t.icon:'?'}</div><div class="stars">${h.level?('Lv'+h.level):''}</div>`;
       el.onclick=()=>{ if(h.owned && !save.squad.includes(h.key)) assignToSquad(h.key); else if(save.squad.includes(h.key)) unequipSquad(h.key); };
+      el.oncontextmenu=(ev)=>{ ev.preventDefault(); if(!h.owned) return; const value=(rarityLabel==='mythic'?200:rarityLabel==='legendary'?100:rarityLabel==='epic'?50:rarityLabel==='rare'?20:10); save.gold+=value; save.heroes=save.heroes.filter(x=>x.key!==h.key); if(save.squad.includes(h.key)) save.squad=save.squad.filter(k=>k!==h.key); persist(); renderHeroes(); renderHud(); notify('💨 Disenchanted +'+value+'⚡'); };
       grid.appendChild(el);
     });
     renderSquad();
