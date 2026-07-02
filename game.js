@@ -48,10 +48,14 @@
     {id:'starter_pack',name:'Starter Pack',desc:'Gold + Hero shard',icon:'🎁',price:0.99,currency:'usd',give:{gold:2000,gems:50},type:'pack'},
     {id:'starter_hero',name:'Hero Shard: Frost',desc:'Unlock Frost',icon:'❄️',price:1.99,currency:'usd',give:{shard:'frost'},type:'shard'},
     {id:'no_ads',name:'Remove Ads',desc:'No more ad placeholders',icon:'🚫',price:2.99,currency:'usd',type:'no_ads'},
+    {id:'promo_100g',name:'Quick Gold',desc:'1000 gold promo',icon:'⚡',price:'Ad or $0.49',currency:'promo',give:{gold:1000},type:'promo'},
+    {id:'promo_20gems',name:'Gem sprinkle',desc:'20 gems promo',icon:'💎',price:'Ad',currency:'promo',give:{gems:20},type:'promo'},
   ];
   const EVENTS=[
     {id:'click_boom',name:'Click Surge',desc:'+200% attack power for 24h',duration:24*60*60*1000,active:true},
     {id:'gold_rush',name:'Gold Rush',desc:'+150% gold from bosses',duration:48*60*60*1000,active:true},
+    {id:'double_gems',name:'Gem Mirage',desc:'+100% gem gains for 6h',duration:6*60*60*1000,active:true},
+    {id:'hero_fest',name:'Hero Fest',desc:'+70% rare+ hero rate',duration:72*60*60*1000,active:true},
   ];
 
   let save = load();
@@ -70,11 +74,11 @@
 
   /* boss calc */
   function currentBoss(){ const idx=save.stage%BOSSES.length; const ch=Math.floor(save.stage/7)+1; const boss={...BOSSES[idx]}; const scale=Math.pow(1.22,save.stage); boss.hp=Math.floor(boss.hp*scale); boss.atk=Math.floor(boss.atk*scale); boss.gold=Math.floor(boss.gold*scale); boss.maxHp=boss.hp; boss.chapter=ch; return boss; }
-  function squadPower(){ const sq=save.squad.slice(0,4); if(!sq.length) return 1; let power=0; sq.forEach(key=>{ const h=save.heroes.find(x=>x.key===key); if(!h) return; const base=HERO_TEMPLATES.find(t=>t.key===key); if(!base) return; const lvl=h.level||1; const rarityMul = {common:1,rare:1.4,epic:1.9,legendary:2.7,mythic:3.5}; const multi = rarityMul[h.rarity]||1; const atk = base.atkGrowth*5*lvl*multi; const hp = base.hpGrowth*20*lvl*multi; power += atk; }); return Math.max(1,power); }
+  function squadPower(){ const sq=save.squad.slice(0,4); if(!sq.length) return 1; let power=0; sq.forEach(key=>{ const h=save.heroes.find(x=>x.key===key); if(!h) return; const base=HERO_TEMPLATES.find(t=>t.key===key.split('_')[0]); if(!base) return; const lvl=h.level||1; const rarityMul = {common:1,rare:1.4,epic:1.9,legendary:2.7,mythic:3.5}; const multi = rarityMul[h.rarity]||1; const atk = base.atkGrowth*5*lvl*multi; const hp = base.hpGrowth*20*lvl*multi; power += atk; }); const activeBonus = (currentBoss()?.chapter||1) >= 4 ? 1.25 : 1; return Math.max(1,power*activeBonus); }
   function remainingEnergy(){ const now=Date.now(); const diff=now-save.energyTs; const regen=Math.floor(diff/1000); if(regen>0){ save.energy=Math.min(save.maxEnergy,save.energy+regen); save.energyTs=now; persist();} return save.energy; }
 
   /* hero generation */
-  function rollHero(){ save.pity++; let pool=['mythic']; if(save.pity>=10){ pool.push('mythic','legendary'); } const total=RARITY_WEIGHTS[Object.keys(RARITY_WEIGHTS).reduce((a,b)=>RARITY_WEIGHTS[a]+RARITY_WEIGHTS[b]>100?a:b)]; const sum=Object.values(RARITY_WEIGHTS).reduce((a,b)=>a+b,0); let r=Math.random()*sum, acc=0, rarity='common'; for(const [k,w] of Object.entries(RARITY_WEIGHTS)){ acc+=w; if(r<=acc){ rarity=k; break; } } const templates=HERO_TEMPLATES; const t=templates[Math.floor(Math.random()*templates.length)]; return { key:t.key+'_'+Date.now(), base:t.key, name:t.name, icon:t.icon, class:t.class, rarity, level:1, xp:0, owned:true }; }
+  function rollHero(){ save.pity++; let pool=['mythic']; if(save.pity>=10){ pool.push('mythic','legendary'); } const total=RARITY_WEIGHTS[Object.keys(RARITY_WEIGHTS).reduce((a,b)=>RARITY_WEIGHTS[a]+RARITY_WEIGHTS[b]>100?a:b)]; const sum=Object.values(RARITY_WEIGHTS).reduce((a,b)=>a+b,0); let r=Math.random()*sum, acc=0, rarity='common'; for(const [k,w] of Object.entries(RARITY_WEIGHTS)){ acc+=w; if(r<=acc){ rarity=k; break; } } if(EVENTS.find(e=>e.id==='hero_fest')?.active){ const reroll=Math.random(); if(reroll<0.6){ rarity='rare'; } if(reroll<0.9){ rarity='epic'; } } const templates=HERO_TEMPLATES; const t=templates[Math.floor(Math.random()*templates.length)]; return { key:t.key+'_'+Date.now()+'_'+Math.floor(Math.random()*9999), base:t.key, name:t.name, icon:t.icon, class:t.class, rarity, level:1, xp:0, owned:true }; }
   function giveHero(baseKey,forcedRarity){ const t=HERO_TEMPLATES.find(x=>x.key===baseKey); if(!t) return; const h={key:t.key+'_'+Date.now(),base:t.key,name:t.name,icon:t.icon,class:t.class,rarity:forcedRarity||'common',level:1,xp:0,owned:true}; save.heroes.push(h); return h; }
 
   /* progression */
@@ -100,6 +104,7 @@
     if(item.type==='pack'){ save.gold=(save.gold||0)+item.give.gold; save.gems=(save.gems||0)+(item.give.gems||0); persist(); renderShop(); renderHud(); notify('Pack claimed!'); return; }
     if(item.type==='shard'){ const base=item.give.shard; if(save.heroes.some(h=>h.base===base)){ notify('Already owned'); return; } giveHero(base,'rare'); persist(); renderHeroes(); renderHud(); notify('Hero unlocked!'); return; }
     if(item.type==='no_ads'){ save.settings.noAds=true; persist(); notify('No ads enabled!'); renderShop(); return; }
+    if(item.type==='promo'){ const rewardStart=item.reward; if(item.reward==='gems'){ save.gems+=item.amount; } else { save.gold+=item.amount; } persist(); renderShop(); renderHud(); notify('Promo redeemed!'); return; }
   }
 
   /* Daily Rewards */
@@ -158,8 +163,7 @@
     closeSettings(){ $('#settingsOverlay').classList.remove('show'); },
     buyGems(){ notify('IAP hook ready. Add AdMob / RevenueCat for store purchases.'); },
     buyHero(shard){ notify('Hero voucher hook. Add payment SDK here.'); },
-    heroGirl(h){ notify('Voucher redeemed. Reward = skin unlock.'); },
-    playAd(){ notify('Ad hook. Good slot for rewarded video.'); },
+    watchAd(){ if(save.settings.noAds){ return notify('No ads enabled'); } notify('🎬 Rewarded video hook → grants bonus'); save.gems+=5; persist(); renderHud(); renderShop(); },
     claimDaily(){ notify('Calendar claim hook.'); },
     claimPass(){ if(save.passXp>=100){ save.passLvl++; save.passXp-=100; persist(); notify('Pass level up!'); this.renderPass(); } else { notify('Not enough XP'); }},
     reforged(){ notify('Forge placeholder.'); },
