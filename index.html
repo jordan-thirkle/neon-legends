@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#6d28d9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Neon Legends — Idle RPG</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- Top HUD -->
+<div class="top-bar">
+  <div class="cur">⚡ <span id="gold">0</span></div>
+  <div class="cur">💎 <span id="gems">0</span></div>
+  <div class="cur">🏆 <span id="trophies">0</span></div>
+  <div style="flex:1"></div>
+  <button class="btn btn-sm btn-ghost" onclick="game?.openSettings()">⚙️</button>
+  <button class="btn btn-sm btn-ghost" onclick="game?.buyGems()">+💎</button>
+</div>
+<div class="energy-bar"><div class="energy-fill" id="energyFill"></div></div>
+<div id="game-canvas"></div>
+
+<!-- Tabs -->
+<div class="tabs" id="mainTabs">
+  <button class="tab active" data-tab="campaign">⚔️ Battle</button>
+  <button class="tab" data-tab="heroes">🦸 Heroes</button>
+  <button class="tab" data-tab="summon">🎰 Summon</button>
+  <button class="tab" data-tab="shop">🛒 Shop</button>
+  <button class="tab" data-tab="events">🎉 Events</button>
+  <button class="tab" data-tab="guild">🏰 Guild</button>
+  <button class="tab" data-tab="achievements">🏅 Medals</button>
+</div>
+
+<!-- Panels -->
+<div id="campaign" class="tab-panel">
+  <div class="section-title">Chapter <span id="chapterNum">1</span> · Stage <span id="stageNum">1</span></div>
+  <div class="boss" id="bossArea">
+    <div class="portrait" id="bossPortrait">👾</div>
+    <div class="hp-bar" style="position:absolute;bottom:12px;left:12px;right:12px"><div class="hp-fill" id="bossHp"></div></div>
+    <div style="position:absolute;bottom:28px;left:12px;font-size:11px;color:rgba(255,255,255,0.6)" id="bossName">Slime King</div>
+  </div>
+  <div class="list" style="padding-top:8px">
+    <button class="btn" id="attackBtn" style="width:100%">⚔️ ATTACK</button>
+    <button class="btn btn-ghost" id="ultBtn" style="width:100%;margin-top:8px">✨ ULTIMATE (<span id="ultCharge">0</span>/100)</button>
+  </div>
+  <div class="ad-placeholder" style="position:fixed;bottom:64px;left:12px;right:12px;height:36px;z-index:4">📢 Interstitial Ad Slot</div>
+</div>
+
+<div id="heroes" class="tab-panel" style="display:none">
+  <div class="section-title">Squad</div>
+  <div style="padding:0 12px 80px">
+    <div class="card" style="margin-bottom:10px">
+      <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:6px">Active Squad</div>
+      <div id="squadSlots" style="display:flex;gap:8px"></div>
+    </div>
+    <div class="section-title">Collection</div>
+    <div class="hero-grid" id="heroGrid"></div>
+  </div>
+</div>
+
+<div id="summon" class="tab-panel" style="display:none">
+  <div class="summon-scene">
+    <div class="orb" id="summonOrb"></div>
+    <div id="summonResult" style="text-align:center"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+      <button class="btn" id="basicPull">🎰 Basic Pull (100⚡)</button>
+      <button class="btn" style="background:linear-gradient(135deg,#f59e0b,#ef4444)" id="premiumPull">💎 Premium (10💎)</button>
+    </div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.5)">Pity: <span id="pityCount">0</span>/10 · Next guaranteed: <span id="pityProgress">0</span>%</div>
+  </div>
+</div>
+
+<div id="shop" class="tab-panel" style="display:none">
+  <div class="section-title">Shop</div>
+  <div class="list" id="shopList"></div>
+  <div class="section-title">Battle Pass</div>
+  <div class="card" style="margin:0 12px 80px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#f59e0b,#ef4444);
+        display:flex;align-items:center;justify-content:center;font-size:24px">🎫</div>
+      <div><div class="title" style="font-size:16px">Neon Pass</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">Season 1 · 30 days</div></div>
+    </div>
+    <div class="hp-bar" style="margin-bottom:8px"><div class="hp-fill" id="passProgress" style="width:0%"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:12px">
+      <span>Level <span id="passLvl">1</span></span><span id="passXp">0/100 XP</span>
+    </div>
+    <button class="btn btn-sm" id="passClaim">🎁 Claim Reward</button>
+  </div>
+</div>
+
+<div id="events" class="tab-panel" style="display:none">
+  <div class="section-title">Active Events</div>
+  <div class="list" id="eventList"></div>
+</div>
+
+<div id="guild" class="tab-panel" style="display:none">
+  <div class="section-title">Guild</div>
+  <div class="card" style="margin:0 12px 80px">
+    <div style="text-align:center;padding:40px 0;color:rgba(255,255,255,0.5)">
+      <div style="font-size:48px;margin-bottom:10px">🏰</div>
+      <div>Coming Soon</div>
+      <div style="font-size:11px;margin-top:4px">Guild raids and cooperative battles</div>
+    </div>
+  </div>
+</div>
+
+<div id="achievements" class="tab-panel" style="display:none">
+  <div class="section-title">Medals</div>
+  <div class="list" id="achievementList"></div>
+</div>
+
+<!-- Settings Overlay -->
+<div class="overlay" id="settingsOverlay">
+  <div class="panel">
+    <div class="title" style="margin-bottom:12px">⚙️ Settings</div>
+    <div class="list" style="padding:0">
+      <div class="item"><div class="meta"><div class="title">Sound</div></div>
+        <label class="row" style="gap:4px"><input type="checkbox" id="soundToggle" checked></label></div>
+      <div class="item"><div class="meta"><div class="title">Music</div></div>
+        <label class="row" style="gap:4px"><input type="checkbox" id="musicToggle" checked></label></div>
+      <div class="item"><div class="meta"><div class="title">Notifications</div></div>
+        <label class="row" style="gap:4px"><input type="checkbox" id="notifToggle" checked></label></div>
+    </div>
+    <button class="btn btn-ghost" style="width:100%;margin-top:10px" onclick="game?.closeSettings()">Close</button>
+  </div>
+</div>
+
+<!-- Bottom bar -->
+<div class="tab-bar" id="tabBarMobile">
+  <button class="tab-btn active" data-tab="campaign"><span class="tab-icon">⚔️</span>Battle</button>
+  <button class="tab-btn" data-tab="heroes"><span class="tab-icon">🦸</span>Heroes</button>
+  <button class="tab-btn" data-tab="summon"><span class="tab-icon">🎰</span>Summon</button>
+  <button class="tab-btn" data-tab="shop"><span class="tab-icon">🛒</span>Shop</button>
+  <button class="tab-btn" data-tab="events"><span class="tab-icon">🎉</span>Events</button>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script src="game.js"></script>
+</body>
+</html>
