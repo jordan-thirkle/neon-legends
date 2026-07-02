@@ -1,9 +1,10 @@
-(function(){
-  const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-  const STORAGE_KEY='neon_legends_save_v2';
-  const RARITY_COLORS={common:'#9ca3af',rare:'#60a5fa',epic:'#a78bfa',legendary:'#fbbf24',mythic:'#f472b6'};
-  const RARITY_WEIGHTS={common:50,rare:30,epic:14,legendary:5,mythic:1};
-  const HERO_TEMPLATES=[
+(() => {
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+  const STORAGE_KEY = 'neon_legends_save_v2';
+  const RARITY_COLORS = {common:'#9ca3af',rare:'#60a5fa',epic:'#a78bfa',legendary:'#fbbf24',mythic:'#f472b6'};
+  const RARITY_WEIGHTS = {common:50,rare:30,epic:14,legendary:5,mythic:1};
+  const HERO_TEMPLATES = [
     {key:'ember',name:'Ember',icon:'🔥',class:'Warrior',hpGrowth:.8,atkGrowth:1.2,skill:'Flame Slash'},
     {key:'frost',name:'Frost',icon:'❄️',class:'Mage',hpGrowth:.5,atkGrowth:1.5,skill:'Ice Barrage'},
     {key:'storm',name:'Storm',icon:'⚡',class:'Ranger',hpGrowth:.6,atkGrowth:1.3,skill:'Chain Lightning'},
@@ -17,7 +18,7 @@
     {key:'neon',name:'Neon',icon:'👾',class:'Hacker',hpGrowth:.7,atkGrowth:1.5,skill:'Glitch'},
     {key:'aurora',name:'Aurora',icon:'🌈',class:'Druid',hpGrowth:.9,atkGrowth:1.2,skill:'Aurora Beam'},
   ];
-  const BOSSES=[
+  const BOSSES = [
     {name:'Slime King',icon:'👾',hp:60,atk:1,gold:15},
     {name:'Dark Knight',icon:'🖤',hp:180,atk:2,gold:30},
     {name:'Venom Queen',icon:'🐍',hp:500,atk:4,gold:90},
@@ -26,14 +27,14 @@
     {name:'Inferno Dragon',icon:'🐉',hp:7500,atk:20,gold:1050},
     {name:'Neon Overlord',icon:'👿',hp:18000,atk:35,gold:2250},
   ];
-  const SKINS=[
+  const SKINS = [
     {id:'ember_fire',hero:'ember',name:'Fire Emperor',color:'#ef4444',price:500},
     {id:'frost_ice',hero:'frost',name:'Ice Queen',color:'#22d3ee',price:500},
     {id:'storm_wind',hero:'storm',name:'Storm God',color:'#fbbf24',price:800},
     {id:'shadow_dark',hero:'shadow',name:'Night Reaper',color:'#a855f7',price:1200},
     {id:'neon_punk',hero:'neon',name:'Synthwave Hero',color:'#ec4899',price:1500},
   ];
-  const ACHIEVEMENTS=[
+  const ACHIEVEMENTS = [
     {id:'first_kill',title:'First Blood',desc:'Defeat your first boss',check:s=>s.attackCount>=1},
     {id:'click_100',title:'Clicker',desc:'100 attacks',check:s=>s.attackCount>=100},
     {id:'click_1000',title:'Smasher',desc:'1000 attacks',check:s=>s.attackCount>=1000},
@@ -43,7 +44,7 @@
     {id:'legendary',title:'Legendary',desc:'Pull a legendary hero',check:s=>s.heroes.some(h=>h.rarity==='legendary'||h.rarity==='mythic')},
     {id:'first_ult',title:'Ultimate',desc:'Unleash an ultimate attack',check:s=>s.attackCount>=100},
   ];
-  const SHOP_ITEMS=[
+  const SHOP_ITEMS = [
     {id:'gem_pack_sm',name:'Small Gem Pack',desc:'100 gems',icon:'💎',price:'$0.99',currency:'usd',give:{gems:100},type:'gem'},
     {id:'gem_pack_md',name:'Medium Gem Pack',desc:'500 gems',icon:'💎',price:'$4.99',currency:'usd',give:{gems:500},type:'gem'},
     {id:'starter_pack',name:'Starter Pack',desc:'Gold + Hero shard',icon:'🎁',price:'$0.99',currency:'usd',give:{gold:2000,gems:50},type:'pack'},
@@ -52,146 +53,482 @@
     {id:'promo_100g',name:'Quick Gold',desc:'1000 gold promo',icon:'⚡',price:'$0.49',currency:'promo',give:{gold:1000},type:'promo'},
     {id:'promo_20gems',name:'Gem sprinkle',desc:'20 gems promo',icon:'💎',price:'Watch Ad',currency:'promo',give:{gems:20},type:'promo'},
   ];
-  const EVENTS=[
+  const EVENTS = [
     {id:'click_boom',name:'Click Surge',desc:'+200% attack power for 24h',duration:24*60*60*1000,active:true},
     {id:'gold_rush',name:'Gold Rush',desc:'+150% gold from bosses',duration:48*60*60*1000,active:true},
     {id:'double_gems',name:'Gem Mirage',desc:'+100% gem gains for 6h',duration:6*60*60*1000,active:true},
     {id:'hero_fest',name:'Hero Fest',desc:'+70% rare+ hero rate',duration:72*60*60*1000,active:true},
   ];
+  const LIMITED_BANNER = {id:'lunar_spark',name:'Lunar Spark Banner',desc:'Mythic chance x3 for 24h',endsAt:Date.now()+24*60*60*1000,active:true};
 
   let save = load();
+  const limitedBanner = LIMITED_BANNER;
 
-  function load(){
-    try{ const raw=localStorage.getItem(STORAGE_KEY); return raw?JSON.parse(raw):fresh();}catch(e){return fresh();}
+  function load() {
+    try { const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : fresh(); }
+    catch (e) { return fresh(); }
   }
-  function persist(){ localStorage.setItem(STORAGE_KEY,JSON.stringify(save)); }
-  function fresh(){
+  function persist() { localStorage.setItem(STORAGE_KEY, JSON.stringify(save)); }
+  function fresh() {
     return {gold:0,gems:150,energy:100,maxEnergy:100,energyTs:Date.now(),trophies:0,stage:0,bossHp:null,bossMaxHp:null,attackCount:0,
       heroes:[],squad:[],owned:false,pity:0,pulls:0,passLvl:1,passXp:0,claimedToday:false,lastDaily:null,streak:0,
       achievements:{},settings:{sound:true,music:true,notif:true},firstRun:true,offlineEarningsShown:false,
       eventProgress:{clicks:0,spend:0},skins:{},skinEquipped:{}};
-
-  /* boss calc */
-  function currentBoss(){ const idx=save.stage%BOSSES.length; const ch=Math.floor(save.stage/7)+1; const boss={...BOSSES[idx]}; const scale=Math.pow(1.22,save.stage); boss.hp=Math.floor(boss.hp*scale); boss.atk=Math.floor(boss.atk*scale); boss.gold=Math.floor(boss.gold*scale); boss.maxHp=boss.hp; boss.chapter=ch; return boss; }
-  function squadPower(){ const sq=save.squad.slice(0,4); if(!sq.length) return 1; let power=0; sq.forEach(key=>{ const h=save.heroes.find(x=>x.key===key); if(!h) return; const base=HERO_TEMPLATES.find(t=>t.key===key.split('_')[0]); if(!base) return; const lvl=h.level||1; const rarityMul = {common:1,rare:1.4,epic:1.9,legendary:2.7,mythic:3.5}; const multi = rarityMul[h.rarity]||1; const atk = base.atkGrowth*5*lvl*multi; const hp = base.hpGrowth*20*lvl*multi; power += atk; }); const activeBonus = (currentBoss()?.chapter||1) >= 4 ? 1.25 : 1; return Math.max(1,power*activeBonus); }
-  function remainingEnergy(){ const now=Date.now(); const diff=now-save.energyTs; const regen=Math.floor(diff/1000); if(regen>0){ save.energy=Math.min(save.maxEnergy,save.energy+regen); save.energyTs=now; persist();} return save.energy; }
-
-  /* hero generation */
-  function rollHero(){ save.pity++; let pool=['mythic']; if(save.pity>=10){ pool.push('mythic','legendary'); } const total=RARITY_WEIGHTS[Object.keys(RARITY_WEIGHTS).reduce((a,b)=>RARITY_WEIGHTS[a]+RARITY_WEIGHTS[b]>100?a:b)]; const sum=Object.values(RARITY_WEIGHTS).reduce((a,b)=>a+b,0); let r=Math.random()*sum, acc=0, rarity='common'; for(const [k,w] of Object.entries(RARITY_WEIGHTS)){ acc+=w; if(r<=acc){ rarity=k; break; } } if(EVENTS.find(e=>e.id==='hero_fest')?.active){ const reroll=Math.random(); if(reroll<0.6){ rarity='rare'; } if(reroll<0.9){ rarity='epic'; } } if(LIMITED_BANNER.active && Date.now()<LIMITED_BANNER.endsAt){ if(rarity==='legendary' || rarity==='mythic'){ if(Math.random()<0.75){ rarity='mythic'; } } } const templates=HERO_TEMPLATES; const t=templates[Math.floor(Math.random()*templates.length)]; return { key:t.key+'_'+Date.now()+'_'+Math.floor(Math.random()*9999), base:t.key, name:t.name, icon:t.icon, class:t.class, rarity, level:1, xp:0, owned:true }; }
-
-  /* progression */
-  function assignToSquad(key){ if(save.squad.length>=4) return notify('Squad full!'); save.squad.push(key); persist(); renderHeroes(); notify(`${HERO_TEMPLATES.find(t=>t.key===key.split('_')[0]).name} added`); }
-  function unequipSquad(key){ save.squad=save.squad.filter(k=>k!==key); persist(); renderHeroes(); }
-
-  /* summoning */
-  function doPull(premium){
-    const cost = premium? 10 : 100;
-    const currency = premium? 'gems':'gold';
-    if(save[currency]<cost){ return notify('Not enough ' + currency); }
-    save[currency]-=cost; save.pulls++;
-    const count = premium? 1 : 5;
-    const results=[]; for(let i=0;i<count;i++){ const h=rollHero(); save.heroes.push(h); results.push(h); if(h.rarity==='legendary'||h.rarity==='mythic') notify('⭐ Legendary/Mythic pull!'); }
-    if(premium){ save.pity++; if(save.pity>=10){ for(let i=0;i<5;i++){ const h=rollHero(); save.heroes.push(h); results.push(h);} save.pity=0; } } else { save.pity=0; }
-    const heroCountByRarity = {common:0,rare:0,epic:0,legendary:0,mythic:0}; results.forEach(h=>{ heroCountByRarity[h.rarity]=(heroCountByRarity[h.rarity]||0)+1; }); const best=Object.entries(heroCountByRarity).sort((a,b)=>['mythic','legendary','epic','rare','common'].indexOf(a[0])-['mythic','legendary','epic','rare','common'].indexOf(b[0]))[0];
-    notify('Best: '+(best[0]||'common'));
-    persist(); renderHeroes(); renderSummonResults(results); renderHud();
-
-  /* Shop & Economy */
-  function buyItem(item){
-    if(item.type==='gem'){ save.gems+=item.give.gems; persist(); renderShop(); renderHud(); notify('Gems added!'); return; }
-    if(item.type==='pack'){ save.gold=(save.gold||0)+item.give.gold; save.gems=(save.gems||0)+(item.give.gems||0); persist(); renderShop(); renderHud(); notify('Pack claimed!'); return; }
-    if(item.type==='shard'){ const base=item.give.shard; if(save.heroes.some(h=>h.base===base)){ notify('Already owned'); return; } giveHero(base,'rare'); persist(); renderHeroes(); renderHud(); notify('Hero unlocked!'); return; }
-    if(item.type==='no_ads'){ save.settings.noAds=true; persist(); notify('No ads enabled!'); renderShop(); return; }
-    if(item.type==='promo'){ const rewardStart=item.reward; if(item.reward==='gems'){ save.gems+=item.amount; } else { save.gold+=item.amount; } persist(); renderShop(); renderHud(); notify('Promo redeemed!'); return; }
-
-  /* Daily Rewards */
-  function claimDaily(){ const now=new Date(); const today=now.toDateString(); if(save.lastDaily===today){ return notify('Already claimed today'); } save.lastDaily=today; save.streak=(save.streak||0)+1; const rewards=[{gold:100,gems:10},{gold:200,gems:5},{gold:300,gems:0,shard:'random'},{gold:400,gems:25},{gold:0,gems:50},{gold:600,gems:20},{gold:0,gems:100}]; const r=rewards[(save.streak-1)%rewards.length]||rewards[0]; if(r.gold) save.gold+=r.gold; if(r.gems) save.gems+=r.gems; if(r.shard==='random'){ const k=HERO_TEMPLATES[Math.floor(Math.random()*HERO_TEMPLATES.length)].key; if(!save.heroes.some(h=>h.base===k)) giveHero(k); } persist(); notify('Daily reward claimed!'); renderCalendar(); }
-
-  /* Achievements */
-
-  /* Battle / AFK */
-  function attack(){
-    const now=Date.now(); if(remainingEnergy()<1) return notify('No energy');
-    save.energy-=1; save.energyTs=now; save.attackCount++; save.eventProgress.clicks++; save.passXp+=2;
-    let boss=currentBoss(); if(!save.bossHp){ save.bossMaxHp=boss.hp; save.bossHp=boss.hp; }
-    const dmg=Math.floor(squadPower()*(1+Math.random()*.3)); save.bossHp-=dmg; if(save.bossHp<=0){ defeatBoss(); }
-    persist(); renderHud(); renderCampaign(); checkAchievements(); spawnDmg(dmg); if(save.attackCount===1) setTimeout(quickGacha,700);
   }
-  function defeatBoss(){ const boss=currentBoss(); save.gold+=boss.gold; save.passXp+=10; save.stage++; notify('🏆 Boss defeated! +'+boss.gold+' gold'); save.bossHp=null; save.bossMaxHp=null; persist(); checkAchievements(); }
-  function spawnDmg(dmg){ const bossArea=$('#bossArea'); const el=document.createElement('div'); el.className='dmg'; el.textContent='-'+dmg; bossArea.appendChild(el); setTimeout(()=>el.remove(),800); }
-  function calcOffline(){ const updatesPerSecond=1; const now=Date.now(); const diffSec=Math.min(43200,Math.floor((now-(save.offlineTs||now))/1000)); if(diffSec>0){ const goldGain=Math.floor(diffSec*squadPower()*0.5); save.gold+=goldGain; save.offlineTs=now; persist(); return {seconds:diffSec,gold:goldGain}; } return {seconds:0,gold:0}; }
 
-
-  /* UI */
-  function switchTab(id){ $$('.tab-panel').forEach(p=>p.style.display='none'); const panel=$('#'+id); if(panel) panel.style.display=''; $$('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===id)); $$('#mainTabs .tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===id)); if(id==='heroes') renderHeroes(); if(id==='shop') renderShop(); if(id==='events') renderEvents(); if(id==='achievements') renderAchievements(); }
-  function renderHud(){ $('#gold').textContent=formatBig(save.gold); $('#gems').textContent=save.gems; $('#trophies').textContent=save.trophies; const pct=Math.floor((save.energy/save.maxEnergy)*100); $('#energyFill').style.width=pct+'%'; $('#ultCharge').textContent=Math.min(100,Math.floor(save.attackCount%100)); }
-  function formatBig(n){ if(n>=1e6) return (n/1e6).toFixed(1)+'M'; if(n>=1e3) return (n/1e3).toFixed(1)+'k'; return Math.floor(n); }
-  function renderCampaign(){
-    const boss=currentBoss(); const hp=save.bossHp!=null?Math.max(0,save.bossHp):boss.hp; const pct=save.bossMaxHp?((hp/save.bossMaxHp)*100):100; $('#bossHp').style.width=pct+'%'; $('#bossName').textContent=boss.name; $('#bossPortrait').textContent=boss.icon; $('#chapterNum').textContent=Math.floor(save.stage/7)+1; $('#stageNum').textContent=(save.stage%7)+1;
+  function currentBoss() {
+    const idx = save.stage % BOSSES.length;
+    const ch = Math.floor(save.stage / 7) + 1;
+    const boss = {...BOSSES[idx]};
+    const scale = Math.pow(1.22, save.stage);
+    boss.hp = Math.floor(boss.hp * scale);
+    boss.atk = Math.floor(boss.atk * scale);
+    boss.gold = Math.floor(boss.gold * scale);
+    boss.maxHp = boss.hp;
+    boss.chapter = ch;
+    return boss;
   }
-  function renderHeroes(){
-    const grid=$('#heroGrid'); if(!grid) return; grid.innerHTML='';
-    save.heroes.forEach(h=>{
-      const t=HERO_TEMPLATES.find(x=>x.key===h.base); const rarityLabel=h.rarity?h.rarity:'common';
-      const el=document.createElement('div'); el.className='hero-card rarity-'+rarityLabel; if(h.owned) el.classList.add('owned');
-      el.innerHTML=`<div class="badge">${rarityLabel[0].toUpperCase()}</div><div>${t?t.icon:'?'}</div><div class="stars">${h.level?('Lv'+h.level):''}</div>`;
-      el.onclick=()=>{ if(h.owned && !save.squad.includes(h.key)) assignToSquad(h.key); else if(save.squad.includes(h.key)) unequipSquad(h.key); };
-      el.oncontextmenu=(ev)=>{ ev.preventDefault(); if(!h.owned) return; const value=(rarityLabel==='mythic'?200:rarityLabel==='legendary'?100:rarityLabel==='epic'?50:rarityLabel==='rare'?20:10); save.gold+=value; save.heroes=save.heroes.filter(x=>x.key!==h.key); if(save.squad.includes(h.key)) save.squad=save.squad.filter(k=>k!==h.key); persist(); renderHeroes(); renderHud(); notify('💨 Disenchanted +'+value+'⚡'); };
+  function squadPower() {
+    const sq = save.squad.slice(0,4);
+    if (!sq.length) return 1;
+    let power = 0;
+    sq.forEach(key => {
+      const h = save.heroes.find(x => x.key === key);
+      if (!h) return;
+      const base = HERO_TEMPLATES.find(t => t.key === key.split('_')[0]);
+      if (!base) return;
+      const lvl = h.level || 1;
+      const rarityMul = {common:1,rare:1.4,epic:1.9,legendary:2.7,mythic:3.5};
+      const multi = rarityMul[h.rarity] || 1;
+      const atk = base.atkGrowth * 5 * lvl * multi;
+      power += atk;
+    });
+    const activeBonus = (currentBoss()?.chapter || 1) >= 4 ? 1.25 : 1;
+    return Math.max(1, power * activeBonus);
+  }
+  function remainingEnergy() {
+    const now = Date.now();
+    const diff = now - save.energyTs;
+    const regen = Math.floor(diff / 1000);
+    if (regen > 0) { save.energy = Math.min(save.maxEnergy, save.energy + regen); save.energyTs = now; persist(); }
+    return save.energy;
+  }
+  function energyRefillAt() {
+    const now = Date.now();
+    const diffMs = Math.max(0, (save.maxEnergy - save.energy) * 1000 - (now - save.energyTs));
+    return diffMs;
+  }
+
+  function rollHero() {
+    save.pity++;
+    let pool = ['mythic'];
+    if (save.pity >= 10) { pool.push('mythic','legendary'); }
+    const total = RARITY_WEIGHTS[Object.keys(RARITY_WEIGHTS).reduce((a,b)=>RARITY_WEIGHTS[a]+RARITY_WEIGHTS[b]>100?a:b)];
+    const sum = Object.values(RARITY_WEIGHTS).reduce((a,b)=>a+b,0);
+    let r = Math.random()*sum, acc = 0, rarity = 'common';
+    for (const [k,w] of Object.entries(RARITY_WEIGHTS)) { acc += w; if (r <= acc) { rarity = k; break; } }
+    if (EVENTS.find(e=>e.id==='hero_fest')?.active) {
+      const reroll = Math.random();
+      if (reroll < 0.6) rarity = 'rare';
+      if (reroll < 0.9) rarity = 'epic';
+    }
+    if (limitedBanner.active && Date.now() < limitedBanner.endsAt) {
+      if (rarity === 'legendary' || rarity === 'mythic') { if (Math.random() < 0.75) rarity = 'mythic'; }
+    }
+    const templates = HERO_TEMPLATES;
+    const t = templates[Math.floor(Math.random()*templates.length)];
+    return {key:t.key+'_'+Date.now()+'_'+Math.floor(Math.random()*9999),base:t.key,name:t.name,icon:t.icon,class:t.class,rarity,level:1,xp:0,owned:true};
+  }
+  function giveHero(baseKey, forcedRarity) {
+    const t = HERO_TEMPLATES.find(x => x.key === baseKey);
+    if (!t) return;
+    const h = {key:t.key+'_'+Date.now(),base:t.key,name:t.name,icon:t.icon,class:t.class,rarity:forcedRarity||'common',level:1,xp:0,owned:true};
+    save.heroes.push(h);
+    return h;
+  }
+
+  function assignToSquad(key) { if (save.squad.length>=4) return notify('Squad full!'); save.squad.push(key); persist(); renderHeroes(); notify(`${HERO_TEMPLATES.find(t=>t.key===key.split('_')[0]).name} added`); }
+  function unequipSquad(key) { save.squad = save.squad.filter(k => k !== key); persist(); renderHeroes(); }
+
+  function doPull(premium) {
+    const cost = premium ? 10 : 100;
+    const currency = premium ? 'gems' : 'gold';
+    if (save[currency] < cost) return notify('Not enough ' + currency);
+    save[currency] -= cost;
+    save.pulls++;
+    const count = premium ? 1 : 5;
+    const results = [];
+    for (let i = 0; i < count; i++) { const h = rollHero(); save.heroes.push(h); results.push(h); if (h.rarity==='legendary'||h.rarity==='mythic') notify('⭐ Legendary/Mythic pull!'); }
+    if (premium) {
+      save.pity++;
+      if (save.pity >= 10) { for (let i = 0; i < 5; i++) { const h = rollHero(); save.heroes.push(h); results.push(h); } save.pity = 0; }
+    } else { save.pity = 0; }
+    const heroCountByRarity = {common:0,rare:0,epic:0,legendary:0,mythic:0};
+    results.forEach(h => { heroCountByRarity[h.rarity] = (heroCountByRarity[h.rarity]||0) + 1; });
+    const best = Object.entries(heroCountByRarity).sort((a,b)=>['mythic','legendary','epic','rare','common'].indexOf(a[0])-['mythic','legendary','epic','rare','common'].indexOf(b[0]))[0];
+    notify('Best: ' + (best[0] || 'common'));
+    persist();
+    renderHeroes();
+    renderSummonResults(results);
+    renderHud();
+  }
+
+  function buyItem(item) {
+    if (item.type === 'gem') { save.gems += item.give.gems; persist(); renderShop(); renderHud(); notify('Gems added!'); return; }
+    if (item.type === 'pack') { save.gold = (save.gold||0) + item.give.gold; save.gems = (save.gems||0) + (item.give.gems||0); persist(); renderShop(); renderHud(); notify('Pack claimed!'); return; }
+    if (item.type === 'shard') { const base = item.give.shard; if (save.heroes.some(h=>h.base===base)) { notify('Already owned'); return; } giveHero(base,'rare'); persist(); renderHeroes(); renderHud(); notify('Hero unlocked!'); return; }
+    if (item.type === 'no_ads') { save.settings.noAds = true; persist(); notify('No ads enabled!'); renderShop(); return; }
+    if (item.type === 'promo') { if (item.reward === 'gems') save.gems += item.amount; else save.gold += item.amount; persist(); renderShop(); renderHud(); notify('Promo redeemed!'); return; }
+  }
+
+  function claimDaily() {
+    const now = new Date();
+    const today = now.toDateString();
+    if (save.lastDaily === today) return notify('Already claimed today');
+    save.lastDaily = today;
+    save.streak = (save.streak || 0) + 1;
+    const rewards = [{gold:100,gems:10},{gold:200,gems:5},{gold:300,gems:0,shard:'random'},{gold:400,gems:25},{gold:0,gems:50},{gold:600,gems:20},{gold:0,gems:100}];
+    const r = rewards[(save.streak - 1) % rewards.length] || rewards[0];
+    if (r.gold) save.gold += r.gold;
+    if (r.gems) save.gems += r.gems;
+    if (r.shard === 'random') { const k = HERO_TEMPLATES[Math.floor(Math.random()*HERO_TEMPLATES.length)].key; if (!save.heroes.some(h=>h.base===k)) giveHero(k); }
+    persist();
+    notify('Daily reward claimed!');
+    renderCalendar();
+  }
+
+  function checkAchievements() {
+    let changed = false;
+    ACHIEVEMENTS.forEach(a => { if (!save.achievements[a.id] && a.check(save)) { save.achievements[a.id] = true; save.trophies++; notify('🏅 ' + a.title); changed = true; } });
+    if (changed) persist();
+    renderHud();
+    renderAchievements();
+  }
+
+  function attack() {
+    const now = Date.now();
+    if (remainingEnergy() < 1) return notify('No energy');
+    save.energy -= 1;
+    save.energyTs = now;
+    save.attackCount++;
+    save.eventProgress.clicks++;
+    save.passXp += 2;
+    let boss = currentBoss();
+    if (!save.bossHp) { save.bossMaxHp = boss.hp; save.bossHp = boss.hp; }
+    const dmg = Math.floor(squadPower() * (1 + Math.random() * .3));
+    save.bossHp -= dmg;
+    if (save.bossHp <= 0) defeatBoss();
+    persist();
+    renderHud();
+    renderCampaign();
+    checkAchievements();
+    spawnDmg(dmg);
+    if (save.attackCount === 1) setTimeout(quickGacha, 700);
+  }
+  function defeatBoss() {
+    const boss = currentBoss();
+    save.gold += boss.gold;
+    save.passXp += 10;
+    save.stage++;
+    notify('🏆 Boss defeated! +' + boss.gold + ' gold');
+    save.bossHp = null;
+    save.bossMaxHp = null;
+    persist();
+    checkAchievements();
+  }
+  function spawnDmg(dmg) {
+    const bossArea = $('#bossArea');
+    const el = document.createElement('div');
+    el.className = 'dmg';
+    el.textContent = '-' + dmg;
+    bossArea.appendChild(el);
+    setTimeout(() => el.remove(), 800);
+  }
+  function calcOffline() {
+    const now = Date.now();
+    const diffSec = Math.min(43200, Math.floor((now - (save.offlineTs || now)) / 1000));
+    if (diffSec > 0) {
+      const goldGain = Math.floor(diffSec * squadPower() * 0.5);
+      save.gold += goldGain;
+      save.offlineTs = now;
+      persist();
+      return {seconds: diffSec, gold: goldGain};
+    }
+    return {seconds: 0, gold: 0};
+  }
+  function formatTime(sec) {
+    if (sec < 60) return sec + 's';
+    if (sec < 3600) return Math.floor(sec / 60) + 'm';
+    return Math.floor(sec / 3600) + 'h ' + (Math.floor((sec % 3600) / 60)) + 'm';
+  }
+  function quickGacha() {
+    switchTab('summon');
+    const orb = $('#summonOrb');
+    if (!orb) return;
+    orb.style.transform = 'scale(1.2)';
+    setTimeout(() => {
+      if (save.attackCount === 1) {
+        const forcedRoll = () => {
+          const t = HERO_TEMPLATES[Math.floor(Math.random()*HERO_TEMPLATES.length)];
+          return {key:t.key+'_'+Date.now()+'_'+Math.floor(Math.random()*9999),base:t.key,name:t.name,icon:t.icon,class:t.class,rarity:'rare',level:1,xp:0,owned:true};
+        };
+        const h = forcedRoll();
+        save.heroes.push(h);
+        save.pulls++;
+        save.pity = 0;
+        renderSummonResults([h]);
+        renderHeroes();
+        renderHud();
+        setTimeout(() => { save.heroes.forEach(h2 => { if (!save.squad.includes(h2.key)) assignToSquad(h2.key); }); renderHeroes(); renderHud(); switchTab('campaign'); }, 900);
+      } else {
+        doPull(true);
+        setTimeout(() => { save.heroes.forEach(h2 => { if (!save.squad.includes(h2.key)) assignToSquad(h2.key); }); renderHeroes(); renderHud(); switchTab('campaign'); }, 1200);
+      }
+    }, 400);
+  }
+
+  function switchTab(id) {
+    $$('.tab-panel').forEach(p => p.style.display = 'none');
+    const panel = $('#' + id);
+    if (panel) panel.style.display = '';
+    $$('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+    $$('#mainTabs .tab').forEach(t => t.classList.toggle('active', t.dataset.tab === id));
+    if (id === 'heroes') renderHeroes();
+    if (id === 'shop') renderShop();
+    if (id === 'events') renderEvents();
+    if (id === 'achievements') renderAchievements();
+  }
+  function renderHud() {
+    $('#gold').textContent = formatBig(save.gold);
+    $('#gems').textContent = save.gems;
+    $('#trophies').textContent = save.trophies;
+    const pct = Math.floor((save.energy / save.maxEnergy) * 100);
+    $('#energyFill').style.width = pct + '%';
+    $('#ultCharge').textContent = Math.min(100, Math.floor(save.attackCount % 100));
+  }
+  function formatBig(n) {
+    if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(1) + 'k';
+    return Math.floor(n);
+  }
+  function renderCampaign() {
+    const boss = currentBoss();
+    const hp = save.bossHp != null ? Math.max(0, save.bossHp) : boss.hp;
+    const pct = save.bossMaxHp ? ((hp / save.bossMaxHp) * 100) : 100;
+    $('#bossHp').style.width = pct + '%';
+    $('#bossName').textContent = boss.name;
+    $('#bossPortrait').textContent = boss.icon;
+    $('#chapterNum').textContent = Math.floor(save.stage / 7) + 1;
+    $('#stageNum').textContent = (save.stage % 7) + 1;
+  }
+  function renderHeroes() {
+    const grid = $('#heroGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    save.heroes.forEach(h => {
+      const t = HERO_TEMPLATES.find(x => x.key === h.base);
+      const rarityLabel = h.rarity || 'common';
+      const el = document.createElement('div');
+      el.className = 'hero-card rarity-' + rarityLabel;
+      if (h.owned) el.classList.add('owned');
+      el.innerHTML = '<div class="badge">' + (rarityLabel[0].toUpperCase()) + '</div><div>' + (t ? t.icon : '?') + '</div><div class="stars">' + (h.level ? ('Lv' + h.level) : '') + '</div>';
+      el.onclick = () => { if (h.owned && !save.squad.includes(h.key)) assignToSquad(h.key); else if (save.squad.includes(h.key)) unequipSquad(h.key); };
+      el.oncontextmenu = (ev) => {
+        ev.preventDefault();
+        if (!h.owned) return;
+        const value = rarityLabel === 'mythic' ? 200 : rarityLabel === 'legendary' ? 100 : rarityLabel === 'epic' ? 50 : rarityLabel === 'rare' ? 20 : 10;
+        save.gold += value;
+        save.heroes = save.heroes.filter(x => x.key !== h.key);
+        if (save.squad.includes(h.key)) save.squad = save.squad.filter(k => k !== h.key);
+        persist();
+        renderHeroes();
+        renderHud();
+        notify('💨 Disenchanted +' + value + '⚡');
+      };
       grid.appendChild(el);
     });
     renderSquad();
   }
-  function renderSquad(){ const sl=$('#squadSlots'); if(!sl) return; sl.innerHTML='';
-    for(let i=0;i<4;i++){ const key=save.squad[i]; const h=save.heroes.find(x=>x.key===key); const el=document.createElement('div'); el.style.cssText='width:60px;height:60px;border-radius:12px;background:rgba(124,58,237,0.1);display:flex;align-items:center;justify-content:center;font-size:26px;border:1px solid rgba(124,58,237,0.3)'; if(h){ const t=HERO_TEMPLATES.find(x=>x.key===h.base); el.textContent=t?t.icon:'?'; el.onclick=()=>unequipSquad(key); } else { el.textContent='+'; el.onclick=()=>{ notify('Open Heroes to add'); }; } sl.appendChild(el); }}
-  function renderShop(){ const list=$('#shopList'); if(!list) return; list.innerHTML=''; SHOP_ITEMS.forEach(item=>{ const el=document.createElement('div'); el.className='item'; el.innerHTML=`<div class="icon">${item.icon}</div><div class="meta"><div class="title">${item.name}</div><div class="desc">${item.desc}</div></div><div class="action"><button class="btn btn-sm">${item.currency==='usd'?'$'+item.price:item.price}</button></div>`; const btn=el.querySelector('button'); btn.onclick=()=>buyItem(item); if(item.type==='promo'||item.currency!=='usd') btn.classList.add('btn-ghost'); list.appendChild(el); }); }
-  function renderSummon(){ }
-  function renderSummonResults(results){ const res=$('#summonResult'); if(!res) return; res.innerHTML=''; results.forEach((h,i)=>{ const t=HERO_TEMPLATES.find(x=>x.key===h.base); setTimeout(()=>{ const el=document.createElement('div'); el.style.cssText='margin:10px auto;text-align:center'; el.innerHTML=`<div class="hero-portrait-large" style="border:2px solid ${RARITY_COLORS[h.rarity]||'#fff'};margin:0 auto">${t&&t.icon?t.icon:'?'}</div><div style="font-weight:700;margin-top:6px">${h?h.name:'?'}</div><div style="font-size:11px;color:${RARITY_COLORS[h.rarity]||'#aaa'};text-transform:uppercase">${h.rarity}</div>`; res.appendChild(el); },i*250+i*100); }); }
-  function renderEvents(){ const list=$('#eventList'); if(!list) return; list.innerHTML=''; const limitLeft = LIMITED_BANNER.active && Date.now()<LIMITED_BANNER.endsAt ? Math.max(0,Math.floor((LIMITED_BANNER.endsAt-Date.now())/1000)) : 0; const all=[...EVENTS]; if(limitLeft>0) all.unshift(LIMITED_BANNER); all.forEach(ev=>{ const el=document.createElement('div'); el.className='item'; const timeLeft = ev.endsAt ? Math.max(0,Math.floor((ev.endsAt-Date.now())/1000)) : null; const desc=(ev.desc||'') + (timeLeft!=null ? ' · ends in '+timeLeft+'s' :''); el.innerHTML=`<div class="icon">${ev.id==='lunar_spark'?'🌙':'✨'}</div><div class="meta"><div class="title">${ev.name} ${ev.id==='lunar_spark'?'<span style="color:#fbbf24">LIMITED</span>':''}</div><div class="desc">${desc}</div></div><div class="action"><span style="font-size:11px;color:var(--green)">ACTIVE</span></div>`; list.appendChild(el); }); }
-  function renderAchievements(){ const list=$('#achievementList'); if(!list) return; list.innerHTML=''; ACHIEVEMENTS.forEach(a=>{ const done=!!save.achievements[a.id]; const el=document.createElement('div'); el.className='item'; el.style.opacity=done?1:.5; el.innerHTML=`<div class="icon">${done?'🏅':'🥈'}</div><div class="meta"><div class="title">${a.title}</div><div class="desc">${a.desc}</div></div><div class="action"><button class="btn btn-sm ${done?'':'btn-ghost'}" ${done?'disabled':''}>${done?'Claim':'Locked'}</button></div>`; const btn=el.querySelector('button'); if(btn && !done){ btn.onclick=()=>{ save.achievements[a.id]=true; save.trophies+=10; persist(); renderHud(); renderAchievements(); notify('🏅 '+a.title); }; } list.appendChild(el); }); }
+  function renderSquad() {
+    const sl = $('#squadSlots');
+    if (!sl) return;
+    sl.innerHTML = '';
+    for (let i = 0; i < 4; i++) {
+      const key = save.squad[i];
+      const h = save.heroes.find(x => x.key === key);
+      const el = document.createElement('div');
+      el.style.cssText = 'width:60px;height:60px;border-radius:12px;background:rgba(124,58,237,0.1);display:flex;align-items:center;justify-content:center;font-size:26px;border:1px solid rgba(124,58,237,0.3)';
+      if (h) {
+        const t = HERO_TEMPLATES.find(x => x.key === h.base);
+        el.textContent = t ? t.icon : '?';
+        el.onclick = () => unequipSquad(key);
+      } else {
+        el.textContent = '+';
+        el.onclick = () => { notify('Open Heroes to add'); };
+      }
+      sl.appendChild(el);
+    }
+  }
+  function renderShop() {
+    const list = $('#shopList');
+    if (!list) return;
+    list.innerHTML = '';
+    SHOP_ITEMS.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'item';
+      el.innerHTML = '<div class="icon">' + item.icon + '</div><div class="meta"><div class="title">' + item.name + '</div><div class="desc">' + item.desc + '</div></div><div class="action"><button class="btn btn-sm">' + (item.currency==='usd'?'$'+item.price:item.price) + '</button></div>';
+      const btn = el.querySelector('button');
+      btn.onclick = () => buyItem(item);
+      if (item.type === 'promo' || item.currency !== 'usd') btn.classList.add('btn-ghost');
+      list.appendChild(el);
+    });
+  }
+  function renderSummon() {}
+  function renderSummonResults(results) {
+    const res = $('#summonResult');
+    if (!res) return;
+    res.innerHTML = '';
+    results.forEach((h, i) => {
+      const t = HERO_TEMPLATES.find(x => x.key === h.base);
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.style.cssText = 'margin:10px auto;text-align:center';
+        el.innerHTML = '<div class="hero-portrait-large" style="border:2px solid ' + (RARITY_COLORS[h.rarity]||'#fff') + ';margin:0 auto">' + (t && t.icon ? t.icon : '?') + '</div><div style="font-weight:700;margin-top:6px">' + (h ? h.name : '?') + '</div><div style="font-size:11px;color:' + (RARITY_COLORS[h.rarity]||'#aaa') + ';text-transform:uppercase">' + h.rarity + '</div>';
+        res.appendChild(el);
+      }, i * 250 + i * 100);
+    });
+  }
+  function renderEvents() {
+    const list = $('#eventList');
+    if (!list) return;
+    list.innerHTML = '';
+    const limitLeft = limitedBanner.active && Date.now() < limitedBanner.endsAt ? Math.max(0, Math.floor((limitedBanner.endsAt - Date.now()) / 1000)) : 0;
+    const all = [...EVENTS];
+    if (limitLeft > 0) all.unshift(limitedBanner);
+    all.forEach(ev => {
+      const el = document.createElement('div');
+      el.className = 'item';
+      const timeLeft = ev.endsAt ? Math.max(0, Math.floor((ev.endsAt - Date.now()) / 1000)) : null;
+      const desc = (ev.desc || '') + (timeLeft != null ? ' · ends in ' + timeLeft + 's' : '');
+      el.innerHTML = '<div class="icon">' + (ev.id==='lunar_spark'?'🌙':'✨') + '</div><div class="meta"><div class="title">' + ev.name + ' ' + (ev.id==='lunar_spark'?'<span style="color:#fbbf24">LIMITED</span>':'') + '</div><div class="desc">' + desc + '</div></div><div class="action"><span style="font-size:11px;color:var(--green)">ACTIVE</span></div>';
+      list.appendChild(el);
+    });
+  }
+  function renderAchievements() {
+    const list = $('#achievementList');
+    if (!list) return;
+    list.innerHTML = '';
+    ACHIEVEMENTS.forEach(a => {
+      const done = !!save.achievements[a.id];
+      const el = document.createElement('div');
+      el.className = 'item';
+      el.style.opacity = done ? 1 : .5;
+      el.innerHTML = '<div class="icon">' + (done?'🏅':'🥈') + '</div><div class="meta"><div class="title">' + a.title + '</div><div class="desc">' + a.desc + '</div></div><div class="action"><button class="btn btn-sm ' + (done?'':'btn-ghost') + '" ' + (done?'disabled':'') + '>' + (done?'Claim':'Locked') + '</button></div>';
+      const btn = el.querySelector('button');
+      if (btn && !done) {
+        btn.onclick = () => { save.achievements[a.id] = true; save.trophies += 10; persist(); renderHud(); renderAchievements(); notify('🏅 ' + a.title); };
+      }
+      list.appendChild(el);
+    });
+  }
+  function renderCalendar() {
+    const c = $('#calendar');
+    if (!c) return;
+    let html = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:0 12px 80px">';
+    for (let i = 1; i <= 7; i++) {
+      const claimed = (save.lastDaily ? new Date(save.lastDaily).getDate() : 999) === i;
+      html += '<div class="card" style="flex:1;min-width:60px;text-align:center;padding:10px 6px"><div style="font-size:10px;color:rgba(255,255,255,0.5)">Day ' + i + '</div><div style="font-size:20px">' + (claimed?'✅':'🎁') + '</div></div>';
+    }
+    html += '</div>';
+    const list = $('#shopList');
+    if (list) { const cal = document.createElement('div'); cal.innerHTML = html; list.parentNode.insertBefore(cal, list.nextSibling); }
+  }
+  function notify(text) {
+    const el = $('#notif');
+    el.textContent = text;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 1800);
+  }
 
-  function notify(text){ const el=$('#notif'); el.textContent=text; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),1800); }
-  window.game={
+  window.game = {
     attack,
     switchTab,
-    openSettings(){ $('#settingsOverlay').classList.add('show'); },
-    closeSettings(){ $('#settingsOverlay').classList.remove('show'); },
-    buyGems(){ notify('IAP hook ready. Add AdMob / RevenueCat for store purchases.'); },
-    buyHero(shard){ notify('Hero voucher hook. Add payment SDK here.'); },
-    watchAd(){ if(save.settings.noAds){ return notify('No ads enabled'); } notify('🎬 Rewarded video hook → grants bonus'); save.gems+=5; persist(); renderHud(); renderShop(); },
-    claimDaily(){ notify('Calendar claim hook.'); },
-    claimPass(){ if(save.passXp>=100){ save.passLvl++; save.passXp-=100; persist(); notify('Pass level up!'); this.renderPass(); } else { notify('Not enough XP'); }},
-    reforged(){ notify('Forge placeholder.'); },
-    showEnergyTimer(){ const left=energyRefillAt(); notify('Energy refill in '+Math.ceil(left/1000)); },
-    autoEnergy(){ setInterval(()=>{ if(save.energy<save.maxEnergy){ renderHud(); } },1000); },
-    init(){
-      if(!save.bossHp){ const b=currentBoss(); save.bossMaxHp=b.hp; save.bossHp=b.hp; save.offlineTs=Date.now(); persist(); }
-      const offline=calcOffline(); if(offline.seconds>0 && !save.offlineEarningsShown){ notify(`Welcome back! +${formatBig(offline.gold)}⚡ earned offline`); save.offlineEarningsShown=true; persist(); }
-      renderHud(); renderCampaign(); renderHeroes(); renderSummon(); renderCalendar(); renderEvents(); renderAchievements(); this.renderPass();
+    openSettings() { $('#settingsOverlay').classList.add('show'); },
+    closeSettings() { $('#settingsOverlay').classList.remove('show'); },
+    buyGems() { notify('IAP hook ready. Add AdMob / RevenueCat for store purchases.'); },
+    buyHero(shard) { notify('Hero voucher hook. Add payment SDK here.'); },
+    watchAd() { if (save.settings.noAds) return notify('No ads enabled'); notify('🎬 Rewarded video hook → grants bonus'); save.gems += 5; persist(); renderHud(); renderShop(); },
+    claimDaily() { claimDaily(); },
+    claimPass() { if (save.passXp >= 100) { save.passLvl++; save.passXp -= 100; persist(); notify('Pass level up!'); this.renderPass(); } else { notify('Not enough XP'); } },
+    reforged() { notify('Forge placeholder.'); },
+    showEnergyTimer() { const left = energyRefillAt(); notify('Energy refill in ' + Math.ceil(left / 1000)); },
+    autoEnergy() { setInterval(() => { if (save.energy < save.maxEnergy) renderHud(); }, 1000); },
+    init() {
+      if (!save.bossHp) { const b = currentBoss(); save.bossMaxHp = b.hp; save.bossHp = b.hp; save.offlineTs = Date.now(); persist(); }
+      const offline = calcOffline();
+      if (offline.seconds > 0 && !save.offlineEarningsShown) { notify('Welcome back! +' + formatBig(offline.gold) + '⚡ earned offline'); save.offlineEarningsShown = true; persist(); }
+      renderHud();
+      renderCampaign();
+      renderHeroes();
+      renderSummon();
+      renderCalendar();
+      renderEvents();
+      renderAchievements();
+      this.renderPass();
     },
-    renderHeroes(){ renderHeroes(); },
-    renderHud(){ renderHud(); },
-    renderPass(){ $('#passProgress').style.width=Math.min(100,save.passXp)+'%'; $('#passLvl').textContent=save.passLvl; $('#passXp').textContent=save.passXp+'/100 XP'; },
-    renderSummon(){ $('#pityCount').textContent=save.pity; $('#pityProgress').textContent=Math.min(100,Math.floor((save.pity/10)*100)); },
-    renderAchievements(){ renderAchievements(); },
-    renderEvents(){ renderEvents(); }
+    renderHeroes() { renderHeroes(); },
+    renderHud() { renderHud(); },
+    renderPass() { $('#passProgress').style.width = Math.min(100, save.passXp) + '%'; $('#passLvl').textContent = save.passLvl; $('#passXp').textContent = save.passXp + '/100 XP'; },
+    renderSummon() { $('#pityCount').textContent = save.pity; $('#pityProgress').textContent = Math.min(100, Math.floor((save.pity / 10) * 100)); },
+    renderAchievements() { renderAchievements(); },
+    renderEvents() { renderEvents(); }
   };
 
-  function boot(){
-    // Tab clicks
-    $('#mainTabs').addEventListener('click', e=>{ const t=e.target.closest('.tab'); if(t) switchTab(t.dataset.tab); });
-    $('#tabBarMobile').addEventListener('click', e=>{ const btn=e.target.closest('.tab-btn'); if(btn) switchTab(btn.dataset.tab); });
-    $('#attackBtn').onclick=()=>game.attack();
-    $('#ultBtn').onclick=()=>{ if(save.attackCount>=100){ notify('Ultimate unleashed!'); save.attackCount-=100; persist(); } else { notify('Charge more'); } };
-    $('#basicPull').onclick=()=>doPull(false);
-    $('#premiumPull').onclick=()=>doPull(true);
-    $('#watchAd').onclick=()=>game.watchAd();
-    $('#passClaim').onclick=()=>game.claimPass();
-    const saveExport=$('#exportSave'); const saveImport=$('#importSave'); if(saveExport){ saveExport.onclick=()=>{ const blob=new Blob([JSON.stringify(save)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='neon-legends-save.json'; a.click(); }; } if(saveImport){ saveImport.onclick=()=>{ const input=document.createElement('input'); input.type='file'; input.accept='application/json'; input.onchange=e=>{ const file=e.target.files[0]; if(!file) return; const r=new FileReader(); r.onload=ev=>{ try{ save=JSON.parse(ev.target.result); persist(); notify('Save imported'); location.reload(); }catch(err){ notify('Invalid save'); }}; r.readAsText(file); }; input.click(); }; } game.init();
-    if(save.attackCount===0){ const help=$('#helpToast'); if(help){ help.style.display=''; setTimeout(()=>help.style.display='none',6000); } }
-    setInterval(()=>{ game.renderHud(); game.renderPass(); game.renderSummon(); game.renderEvents(); },1000);
-    setInterval(()=>{ renderCampaign(); },1000);
+  function boot() {
+    $('#mainTabs').addEventListener('click', e => { const t = e.target.closest('.tab'); if (t) switchTab(t.dataset.tab); });
+    $('#tabBarMobile').addEventListener('click', e => { const btn = e.target.closest('.tab-btn'); if (btn) switchTab(btn.dataset.tab); });
+    $('#attackBtn').onclick = () => game.attack();
+    $('#ultBtn').onclick = () => { if (save.attackCount >= 100) { notify('Ultimate unleashed!'); save.attackCount -= 100; persist(); } else { notify('Charge more'); } };
+    $('#basicPull').onclick = () => doPull(false);
+    $('#premiumPull').onclick = () => doPull(true);
+    $('#watchAd').onclick = () => game.watchAd();
+    $('#passClaim').onclick = () => game.claimPass();
+    const saveExport = $('#exportSave');
+    const saveImport = $('#importSave');
+    if (saveExport) {
+      saveExport.onclick = () => {
+        const blob = new Blob([JSON.stringify(save)], {type:'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'neon-legends-save.json';
+        a.click();
+      };
+    }
+    if (saveImport) {
+      saveImport.onclick = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'application/json';
+        input.onchange = e => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const r = new FileReader();
+          r.onload = ev => {
+            try { save = JSON.parse(ev.target.result); persist(); notify('Save imported'); location.reload(); }
+            catch (err) { notify('Invalid save'); }
+          };
+          r.readAsText(file);
+        };
+        input.click();
+      };
+    }
+    game.init();
+    if (save.attackCount === 0) { const help = $('#helpToast'); if (help) { help.style.display = ''; setTimeout(() => help.style.display = 'none', 6000); } }
+    setInterval(() => { game.renderHud(); game.renderPass(); game.renderSummon(); game.renderEvents(); }, 1000);
+    setInterval(() => { renderCampaign(); }, 1000);
     notify('⚡ Welcome to Neon Legends!');
   }
 
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
 })();
