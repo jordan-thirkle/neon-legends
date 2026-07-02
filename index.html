@@ -19,8 +19,10 @@
   <div style="flex:1"></div>
   <button class="btn btn-sm btn-ghost" onclick="game?.openSettings()">⚙️</button>
   <button class="btn btn-sm btn-ghost" onclick="game?.buyGems()">+💎</button>
+  <button class="btn btn-sm btn-ghost" id="energyTimerBtn" onclick="game?.showEnergyTimer()">⏳</button>
 </div>
 <div class="energy-bar"><div class="energy-fill" id="energyFill"></div></div>
+<div id="helpToast" style="position:fixed;top:58px;left:12px;right:12px;background:rgba(13,11,30,0.95);border:1px solid rgba(124,58,237,0.35);border-radius:12px;padding:10px 12px;font-size:12px;z-index:9;display:none">⚔️ Tap Attack to begin. Use Ultimate every 100 hits. Pull heroes in Summon.</div>
 <div id="game-canvas"></div>
 
 <!-- Tabs -->
@@ -122,6 +124,13 @@
 <div id="achievements" class="tab-panel" style="display:none">
   <div class="section-title">Medals</div>
   <div class="list" id="achievementList"></div>
+  <div class="section-title">Save & Load</div>
+  <div class="list" style="padding:0 12px 80px">
+    <div class="item"><div class="meta"><div class="title">Export Save</div><div class="desc">Copy backup code</div></div>
+      <div class="action"><button class="btn btn-sm btn-ghost" id="exportSave">Copy</button></div></div>
+    <div class="item"><div class="meta"><div class="title">Import Save</div><div class="desc">Paste backup code</div></div>
+      <div class="action"><button class="btn btn-sm btn-ghost" id="importSave">Paste</button></div></div>
+  </div>
 </div>
 
 <!-- Settings Overlay -->

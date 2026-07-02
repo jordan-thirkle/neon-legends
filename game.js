@@ -41,9 +41,9 @@
     {id:'reach_ch5',title:'Voyager',desc:'Reach chapter 5',check:s=>s.stage>=5},
     {id:'big_wallet',title:'Big Wallet',desc:'Hold 5000 gold',check:s=>s.gold>=5000},
     {id:'legendary',title:'Legendary',desc:'Pull a legendary hero',check:s=>s.heroes.some(h=>h.rarity==='legendary'||h.rarity==='mythic')},
+    {id:'first_ult',title:'Ultimate',desc:'Unleash an ultimate attack',check:s=>s.attackCount>=100},
   ];
   const SHOP_ITEMS=[
-    {id:'gem_pack_sm',name:'Small Gem Pack',desc:'100 gems',icon:'💎',price:0.99,currency:'usd',give:{gems:100},type:'gem'},
     {id:'gem_pack_md',name:'Medium Gem Pack',desc:'500 gems',icon:'💎',price:4.99,currency:'usd',give:{gems:500},type:'gem'},
     {id:'starter_pack',name:'Starter Pack',desc:'Gold + Hero shard',icon:'🎁',price:0.99,currency:'usd',give:{gold:2000,gems:50},type:'pack'},
     {id:'starter_hero',name:'Hero Shard: Frost',desc:'Unlock Frost',icon:'❄️',price:1.99,currency:'usd',give:{shard:'frost'},type:'shard'},
@@ -77,6 +77,7 @@
   function currentBoss(){ const idx=save.stage%BOSSES.length; const ch=Math.floor(save.stage/7)+1; const boss={...BOSSES[idx]}; const scale=Math.pow(1.22,save.stage); boss.hp=Math.floor(boss.hp*scale); boss.atk=Math.floor(boss.atk*scale); boss.gold=Math.floor(boss.gold*scale); boss.maxHp=boss.hp; boss.chapter=ch; return boss; }
   function squadPower(){ const sq=save.squad.slice(0,4); if(!sq.length) return 1; let power=0; sq.forEach(key=>{ const h=save.heroes.find(x=>x.key===key); if(!h) return; const base=HERO_TEMPLATES.find(t=>t.key===key.split('_')[0]); if(!base) return; const lvl=h.level||1; const rarityMul = {common:1,rare:1.4,epic:1.9,legendary:2.7,mythic:3.5}; const multi = rarityMul[h.rarity]||1; const atk = base.atkGrowth*5*lvl*multi; const hp = base.hpGrowth*20*lvl*multi; power += atk; }); const activeBonus = (currentBoss()?.chapter||1) >= 4 ? 1.25 : 1; return Math.max(1,power*activeBonus); }
   function remainingEnergy(){ const now=Date.now(); const diff=now-save.energyTs; const regen=Math.floor(diff/1000); if(regen>0){ save.energy=Math.min(save.maxEnergy,save.energy+regen); save.energyTs=now; persist();} return save.energy; }
+  function energyRefillAt(){ const now=Date.now(); const diffMs=Math.max(0,(save.maxEnergy-save.energy)*1000 - (now-save.energyTs)); return diffMs; }
 
   /* hero generation */
   function rollHero(){ save.pity++; let pool=['mythic']; if(save.pity>=10){ pool.push('mythic','legendary'); } const total=RARITY_WEIGHTS[Object.keys(RARITY_WEIGHTS).reduce((a,b)=>RARITY_WEIGHTS[a]+RARITY_WEIGHTS[b]>100?a:b)]; const sum=Object.values(RARITY_WEIGHTS).reduce((a,b)=>a+b,0); let r=Math.random()*sum, acc=0, rarity='common'; for(const [k,w] of Object.entries(RARITY_WEIGHTS)){ acc+=w; if(r<=acc){ rarity=k; break; } } if(EVENTS.find(e=>e.id==='hero_fest')?.active){ const reroll=Math.random(); if(reroll<0.6){ rarity='rare'; } if(reroll<0.9){ rarity='epic'; } } if(LIMITED_BANNER.active && Date.now()<LIMITED_BANNER.endsAt){ if(rarity==='legendary' || rarity==='mythic'){ if(Math.random()<0.75){ rarity='mythic'; } } } const templates=HERO_TEMPLATES; const t=templates[Math.floor(Math.random()*templates.length)]; return { key:t.key+'_'+Date.now()+'_'+Math.floor(Math.random()*9999), base:t.key, name:t.name, icon:t.icon, class:t.class, rarity, level:1, xp:0, owned:true }; }
@@ -128,6 +129,7 @@
   function defeatBoss(){ const boss=currentBoss(); save.gold+=boss.gold; save.passXp+=10; save.stage++; notify('🏆 Boss defeated! +'+boss.gold+' gold'); save.bossHp=null; save.bossMaxHp=null; persist(); checkAchievements(); }
   function spawnDmg(dmg){ const bossArea=$('#bossArea'); const el=document.createElement('div'); el.className='dmg'; el.textContent='-'+dmg; bossArea.appendChild(el); setTimeout(()=>el.remove(),800); }
   function calcOffline(){ const updatesPerSecond=1; const now=Date.now(); const diffSec=Math.min(43200,Math.floor((now-(save.offlineTs||now))/1000)); if(diffSec>0){ const goldGain=Math.floor(diffSec*squadPower()*0.5); save.gold+=goldGain; save.offlineTs=now; persist(); return {seconds:diffSec,gold:goldGain}; } return {seconds:0,gold:0}; }
+  function formatTime(sec){ if(sec<60) return sec+'s'; if(sec<3600) return Math.floor(sec/60)+'m'; return Math.floor(sec/3600)+'h '+(Math.floor((sec%3600)/60))+'m'; }
 
   function quickGacha(){ switchTab('summon'); const orb=$('#summonOrb'); if(!orb) return; orb.style.transform='scale(1.2)'; setTimeout(()=>{ if(save.attackCount===1){ /* first guaranteed rare */ const forcedRoll=function(){ const t=HERO_TEMPLATES[Math.floor(Math.random()*HERO_TEMPLATES.length)]; return { key:t.key+'_'+Date.now()+'_'+Math.floor(Math.random()*9999), base:t.key, name:t.name, icon:t.icon, class:t.class, rarity:'rare', level:1, xp:0, owned:true }; }; const h=forcedRoll(); save.heroes.push(h); save.pulls++; save.pity=0; renderSummonResults([h]); renderHeroes(); renderHud(); setTimeout(()=>{ save.heroes.forEach(h2=>{ if(!save.squad.includes(h2.key)) assignToSquad(h2.key); }); renderHeroes(); renderHud(); switchTab('campaign'); },900); } else { doPull(true); setTimeout(()=>{ save.heroes.forEach(h2=>{ if(!save.squad.includes(h2.key)) assignToSquad(h2.key); }); renderHeroes(); renderHud(); switchTab('campaign'); },1200); } },400); }
 
@@ -170,6 +172,7 @@
     claimDaily(){ notify('Calendar claim hook.'); },
     claimPass(){ if(save.passXp>=100){ save.passLvl++; save.passXp-=100; persist(); notify('Pass level up!'); this.renderPass(); } else { notify('Not enough XP'); }},
     reforged(){ notify('Forge placeholder.'); },
+    showEnergyTimer(){ const left=energyRefillAt(); notify('Energy refill in '+Math.ceil(left/1000)); },
     autoEnergy(){ setInterval(()=>{ if(save.energy<save.maxEnergy){ renderHud(); } },1000); },
     init(){
       if(!save.bossHp){ const b=currentBoss(); save.bossMaxHp=b.hp; save.bossHp=b.hp; save.offlineTs=Date.now(); persist(); }
@@ -195,6 +198,7 @@
     $('#watchAd').onclick=()=>game.watchAd();
     $('#passClaim').onclick=()=>game.claimPass();
     game.init();
+    if(save.attackCount===0){ const help=$('#helpToast'); if(help){ help.style.display=''; setTimeout(()=>help.style.display='none',6000); } }
     setInterval(()=>{ game.renderHud(); game.renderPass(); game.renderSummon(); game.renderEvents(); },1000);
     setInterval(()=>{ renderCampaign(); },1000);
     notify('⚡ Welcome to Neon Legends!');
