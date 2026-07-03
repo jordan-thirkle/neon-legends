@@ -13,6 +13,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="style.css">
 <script async src="https://analytics.plygrnd.org/js/script.js" data-website-id="neon-legends-prod-01"></script>
+
 </head>
 <body>
 <!-- Top HUD -->
@@ -52,7 +53,6 @@
     <button class="btn" id="attackBtn" style="width:100%">⚔️ ATTACK</button>
     <button class="btn btn-ghost" id="ultBtn" style="width:100%;margin-top:8px">✨ ULTIMATE (<span id="ultCharge">0</span>/100)</button>
   </div>
-  <div class="ad-placeholder" style="position:fixed;bottom:64px;left:12px;right:12px;height:36px;z-index:4">📢 Interstitial Ad Slot</div>
 </div>
 
 <div id="heroes" class="tab-panel" style="display:none">
@@ -84,6 +84,8 @@
 </div>
 
 <div id="shop" class="tab-panel" style="display:none">
+  <div class="section-title">Daily Rewards</div>
+  <div id="calendar" style="padding:0 12px 12px"></div>
   <div class="section-title">Shop</div>
   <div class="list" id="shopList"></div>
   <div class="ad-placeholder" style="position:relative;bottom:auto;left:auto;right:auto;height:36px;margin:10px 12px">📢 Rewarded Video → tap for bonus</div>
@@ -161,6 +163,8 @@
   <button class="tab-btn" data-tab="summon"><span class="tab-icon">🎰</span>Summon</button>
   <button class="tab-btn" data-tab="shop"><span class="tab-icon">🛒</span>Shop</button>
   <button class="tab-btn" data-tab="events"><span class="tab-icon">🎉</span>Events</button>
+  <button class="tab-btn" data-tab="guild"><span class="tab-icon">🏰</span>Guild</button>
+  <button class="tab-btn" data-tab="achievements"><span class="tab-icon">🏅</span>Medals</button>
 </div>
 
 <div class="notif" id="notif"></div>
