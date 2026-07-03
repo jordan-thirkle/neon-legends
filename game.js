@@ -259,61 +259,122 @@
   }
 
   /* ── ATTACK ─────────────────────────────────── */
-  function attack() {
-    const now = Date.now();
-    if (remainingEnergy() < 1) return notify('No energy ⏳');
-    save.energy -= 1;
-    save.energyTs = now;
-    save.attackCount++;
-    save.passXp += 2;
-    let boss = currentBoss();
-    if (!save.bossHp) { save.bossMaxHp = boss.hp; save.bossHp = boss.hp; }
-    const dmg = Math.floor(squadPower() * (1 + Math.random() * 0.3));
-    save.bossHp -= dmg;
-    spawnDmg(dmg);
-    bossHitAnim();
-    playSfx('attack');
-    if (save.bossHp <= 0) { defeatBoss(); }
-    persist(); renderHud(); renderCampaign(); checkAchievements();
-    if (save.attackCount === 1) setTimeout(quickGacha, 700);
-  }
+    function attack() {
+      const now = Date.now();
+      if (remainingEnergy() < 1) return notify('No energy ⏳');
+      const rage = save.bossHp && save.bossMaxHp && save.bossHp < save.bossMaxHp * 0.25;
+      const cost = rage ? 2 : 1;
+      if (save.energy < cost) return notify('Boss rage drains double energy!');
+      save.energy -= cost;
+      save.energyTs = now;
+      save.attackCount++;
+      save.passXp += 2;
+      incCombo();
+      let boss = currentBoss();
+      if (!save.bossHp) { save.bossMaxHp = boss.hp; save.bossHp = boss.hp; }
+      const isCrit = Math.random() < 0.15;
+      let dmg = Math.floor(squadPower() * comboBonus() * (1 + Math.random() * 0.3));
+      if (isCrit) { dmg = Math.floor(dmg * 2); notify('💥 CRIT! x2'); vibrate(30); playSfx('ult'); }
+      save.bossHp -= dmg;
+      spawnDmg(dmg, isCrit);
+      bossHitAnim();
+      playSfx('attack');
+      if (rage) vibrate(15);
+      if (save.bossHp <= 0) { defeatBoss(); }
+      persist(); renderHud(); renderCampaign(); checkAchievements(); renderCombo();
+      animateNum('gold', save.gold, 300);
+      if (save.attackCount === 1) setTimeout(quickGacha, 700);
+    }
 
-  function ultAttack() {
-    if (save.attackCount < 100) return notify('Charge more (' + save.attackCount + '/100)');
-    save.attackCount -= 100;
-    save.ultsUsed = (save.ultsUsed || 0) + 1;
-    let boss = currentBoss();
-    if (!save.bossHp) { save.bossMaxHp = boss.hp; save.bossHp = boss.hp; }
-    const dmg = Math.floor(squadPower() * 5 * (1 + Math.random() * 0.5));
-    save.bossHp -= dmg;
-    spawnDmg(dmg);
-    bossHitAnim();
-    playSfx('ult');
-    playSfx('victory');
-    if (save.bossHp <= 0) { defeatBoss(); }
-    persist(); renderHud(); renderCampaign(); checkAchievements();
-    notify('💥 ULTIMATE! -' + dmg + ' damage!');
-  }
+    function ultAttack() {
+      if (save.attackCount < 100) return notify('Charge more (' + save.attackCount + '/100)');
+      save.attackCount -= 100;
+      save.ultsUsed = (save.ultsUsed || 0) + 1;
+      let boss = currentBoss();
+      if (!save.bossHp) { save.bossMaxHp = boss.hp; save.bossHp = boss.hp; }
+      const dmg = Math.floor(squadPower() * 5 * comboBonus() * (1 + Math.random() * 0.5));
+      save.bossHp -= dmg;
+      spawnDmg(dmg, true);
+      bossHitAnim();
+      vibrate(50);
+      playSfx('ult');
+      playSfx('victory');
+      if (save.bossHp <= 0) { defeatBoss(); }
+      persist(); renderHud(); renderCampaign(); checkAchievements();
+      notify('💥 ULTIMATE! -' + dmg + ' damage!');
+      animateNum('gold', save.gold, 300);
+    }
 
-  function defeatBoss() {
-    const boss = currentBoss();
-    save.gold += boss.gold;
-    save.passXp += 10;
-    save.stage++;
-    notify('🏆 ' + boss.name + ' defeated! +' + boss.gold + ' gold');
-    playSfx('victory');
-    save.bossHp = null; save.bossMaxHp = null;
-    persist(); checkAchievements();
-  }
+    function defeatBoss() {
+      const boss = currentBoss();
+      save.gold += boss.gold;
+      save.passXp += 10;
+      save.stage++;
+      /* Gear drop on defeat */
+      const gearTypes = ['weapon','armor','relic'];
+      const gearNames = {weapon:['Neon Blade','Void Sword','Crystal Fang','Plasma Cutter','Shadow Dagger'],
+        armor:['Phantom Plate','Void Mantle','Crystal Shell','Neon Mail','Obsidian Guard'],
+        relic:['Soul Gem','Eclipse Orb','Rune Stone','Chrono Core','Star Amulet']};
+      const gt = gearTypes[Math.floor(Math.random()*gearTypes.length)];
+      const gn = gearNames[gt][Math.floor(Math.random()*gearNames[gt].length)];
+      const gr = Math.random()<0.1?'rare':Math.random()<0.25?'uncommon':'common';
+      const gStats = {common:{atk:2,hp:10},uncommon:{atk:5,hp:25},rare:{atk:12,hp:60}};
+      const g = {id:'gear_'+Date.now(),name:gn,type:gt,rarity:gr,atk:gStats[gr].atk,hp:gStats[gr].hp};
+      if (!save.gearInventory) save.gearInventory = [];
+      save.gearInventory.push(g);
 
-  function spawnDmg(dmg) {
+      notify('🏆 ' + boss.name + ' defeated! +' + boss.gold + ' gold  🎒 ' + gn + ' [' + gr + ']');
+      playSfx('victory');
+      vibrate(40);
+      animateNum('gold', save.gold, 400);
+      save.bossHp = null; save.bossMaxHp = null;
+      persist(); checkAchievements();
+    }
+
+  function spawnDmg(dmg, isCrit) {
     const area = $('#bossArea');
     if (!area) return;
     const el = document.createElement('div');
-    el.className = 'dmg';
-    el.textContent = '-' + dmg;
+    el.className = 'dmg' + (isCrit ? ' dmg-crit' : '');
+    el.textContent = (isCrit ? '💥 ' : '-') + dmg;
+    if (isCrit) el.style.fontSize = '36px';
     area.appendChild(el);
-    setTimeout(() => el.remove(), 800);
+    if (isCrit) {
+      const flash = document.createElement('div');
+      flash.className = 'crit-flash';
+      document.body.appendChild(flash);
+      setTimeout(() => flash.remove(), 200);
+    }
+    setTimeout(() => el.remove(), 900);
+  }
+
+  function renderCombo() {
+    const el = $('#comboDisplay');
+    if (!el) return;
+    const c = getCombo();
+    if (c >= 3) {
+      el.textContent = '🔥 ' + c + 'x combo';
+      el.style.opacity = '1';
+      el.classList.add('combo-active');
+      setTimeout(() => el.classList.remove('combo-active'), 300);
+    } else {
+      el.style.opacity = '0';
+    }
+  }
+
+  function renderGearInventory() {
+    const list = $('#gearInventoryList');
+    if (!list) return;
+    const gi = save.gearInventory || [];
+    list.innerHTML = gi.length ? '' : '<div style="font-size:11px;color:rgba(255,255,255,0.3);padding:8px;text-align:center">No gear yet. Defeat bosses to earn equipment!</div>';
+    gi.forEach(g => {
+      const el = document.createElement('div');
+      el.className = 'gear-card';
+      const typeIcons = {weapon:'⚔️',armor:'🛡️',relic:'🔮'};
+      const r = g.rarity || 'common';
+      el.innerHTML = '<span>' + (typeIcons[g.type]||'📦') + '</span><span style="flex:1">' + g.name + '</span><span class="gear-rarity ' + r + '">' + r + '</span><span style="font-size:10px;color:rgba(255,255,255,0.4)">+' + g.atk + 'atk +' + g.hp + 'hp</span>';
+      list.appendChild(el);
+    });
   }
 
   function bossHitAnim() {
@@ -336,6 +397,7 @@
 
   /* ── SOUND ──────────────────────────────────── */
   let audioCtx = null;
+  let musicNodes = null;
 
   function initAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -443,9 +505,10 @@
         playSfx('coin');
       };
       grid.appendChild(el);
-    });
-    renderSquad();
-  }
+      });
+      renderSquad();
+      renderGearInventory();
+      }
 
   function renderSquad() {
     const sl = $('#squadSlots'); if (!sl) return;
@@ -535,6 +598,40 @@
     el.classList.add('show');
     setTimeout(() => el.classList.remove('show'), 2000);
   }
+
+  /* ── HAPTICS ─────────────────────────────── */
+  function vibrate(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch(e){} }
+
+  /* ── COUNT-UP ANIMATION ──────────────────── */
+  function animateNum(elId, target, duration) {
+    const el = $(elId); if (!el) return;
+    const start = parseInt(el.textContent) || 0;
+    const diff = target - start;
+    if (Math.abs(diff) < 5 || diff < 0) { el.textContent = target; return; }
+    const step = Math.ceil(diff / (duration / 30));
+    let current = start;
+    const timer = setInterval(() => {
+      current += step;
+      if ((step > 0 && current >= target) || (step < 0 && current <= target)) {
+        current = target; clearInterval(timer);
+      }
+      el.textContent = formatBig(Math.floor(current));
+    }, 30);
+  }
+
+  /* ── COMBO SYSTEM ────────────────────────── */
+  let comboCount = 0;
+  let comboTs = 0;
+
+  function getCombo() {
+    if (Date.now() - comboTs > 3000) comboCount = 0;
+    return comboCount;
+  }
+  function incCombo() {
+    comboTs = Date.now();
+    comboCount++;
+  }
+  function comboBonus() { return 1 + Math.min(comboCount, 20) * 0.03; }
 
   /* ── TUTORIAL GACHA ─────────────────────────── */
   function quickGacha() {

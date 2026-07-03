@@ -53,6 +53,7 @@
     <button class="btn" id="attackBtn" style="width:100%">⚔️ ATTACK</button>
     <button class="btn btn-ghost" id="ultBtn" style="width:100%;margin-top:8px">✨ ULTIMATE (<span id="ultCharge">0</span>/100)</button>
   </div>
+  <div id="comboDisplay" style="position:fixed;top:55px;right:12px;font-size:11px;color:var(--gold);opacity:0;transition:opacity .3s;z-index:9;font-weight:700;font-family:'Orbitron',sans-serif"></div>
 </div>
 
 <div id="heroes" class="tab-panel" style="display:none">
@@ -65,6 +66,8 @@
     <div class="section-title">Collection</div>
     <div class="hero-grid" id="heroGrid"></div>
 <div style="padding:6px 12px 0;font-size:11px;color:rgba(255,255,255,0.45)">Tip: right-click a card to disenchant</div>
+    <div class="section-title" style="margin-top:16px">🎒 Gear Inventory</div>
+    <div id="gearInventoryList" style="padding:0 12px 80px"></div>
   </div>
 </div>
 
