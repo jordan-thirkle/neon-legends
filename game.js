@@ -2,26 +2,32 @@
   'use strict';
   const $ = s => document.querySelector(s);
   const $$ = s => [...document.querySelectorAll(s)];
-  const STORAGE_KEY = 'neon_legends_save_v2';
+  const STORAGE_KEY = 'neon_legends_save_v3';
 
   /* ── DATA ───────────────────────────────────── */
   const RARITY_COLORS = {common:'#9ca3af',rare:'#60a5fa',epic:'#a78bfa',legendary:'#fbbf24',mythic:'#f472b6'};
   const RARITY_WEIGHTS = {common:50,rare:30,epic:14,legendary:5,mythic:1};
   const RARITY_MUL = {common:1,rare:1.4,epic:1.9,legendary:2.7,mythic:3.5};
+  const RARITY_ORDER = ['common','rare','epic','legendary','mythic'];
+
+  const FACTIONS = ['Astra','Umbra','Verdant','Void','Chrono'];
+  const FACTION_WHEEL = {Astra:'Umbra',Umbra:'Verdant',Verdant:'Void',Void:'Chrono',Chrono:'Astra'};
+  const FACTION_ICONS = {Astra:'☀️',Umbra:'🌑',Verdant:'🌿',Void:'🌀',Chrono:'⏳'};
+  const FACTION_COLORS = {Astra:'#fbbf24',Umbra:'#a855f7',Verdant:'#22c55e',Void:'#ef4444',Chrono:'#06b6d4'};
 
   const HERO_TEMPLATES = [
-    {key:'ember',name:'Ember',icon:'🔥',cls:'Warrior',hpG:.8,atkG:1.2,skill:'Flame Slash'},
-    {key:'frost',name:'Frost',icon:'❄️',cls:'Mage',hpG:.5,atkG:1.5,skill:'Ice Barrage'},
-    {key:'storm',name:'Storm',icon:'⚡',cls:'Ranger',hpG:.6,atkG:1.3,skill:'Chain Lightning'},
-    {key:'terra',name:'Terra',icon:'🌿',cls:'Guardian',hpG:1.4,atkG:.9,skill:'Quake'},
-    {key:'nova',name:'Nova',icon:'🌌',cls:'Sorcerer',hpG:.55,atkG:1.6,skill:'Supernova'},
-    {key:'shadow',name:'Shadow',icon:'👤',cls:'Assassin',hpG:.5,atkG:1.7,skill:'Vanish Strike'},
-    {key:'luna',name:'Luna',icon:'🌙',cls:'Priest',hpG:.7,atkG:1.1,skill:'Moonlight'},
-    {key:'volt',name:'Volt',icon:'💥',cls:'Brawler',hpG:1.1,atkG:1.3,skill:'Thunder Fist'},
-    {key:'cinder',name:'Cinder',icon:'🌋',cls:'Warlock',hpG:.6,atkG:1.4,skill:'Inferno'},
-    {key:'glacier',name:'Glacier',icon:'🧊',cls:'Paladin',hpG:1.2,atkG:1.0,skill:'Frozen Oath'},
-    {key:'neon',name:'Neon',icon:'👾',cls:'Hacker',hpG:.7,atkG:1.5,skill:'Glitch'},
-    {key:'aurora',name:'Aurora',icon:'🌈',cls:'Druid',hpG:.9,atkG:1.2,skill:'Aurora Beam'},
+    {key:'ember',name:'Ember',icon:'🔥',cls:'Warrior',hpG:.8,atkG:1.2,skill:'Flame Slash',faction:'Astra'},
+    {key:'frost',name:'Frost',icon:'❄️',cls:'Mage',hpG:.5,atkG:1.5,skill:'Ice Barrage',faction:'Umbra'},
+    {key:'storm',name:'Storm',icon:'⚡',cls:'Ranger',hpG:.6,atkG:1.3,skill:'Chain Lightning',faction:'Verdant'},
+    {key:'terra',name:'Terra',icon:'🌿',cls:'Guardian',hpG:1.4,atkG:.9,skill:'Quake',faction:'Verdant'},
+    {key:'nova',name:'Nova',icon:'🌌',cls:'Sorcerer',hpG:.55,atkG:1.6,skill:'Supernova',faction:'Astra'},
+    {key:'shadow',name:'Shadow',icon:'👤',cls:'Assassin',hpG:.5,atkG:1.7,skill:'Vanish Strike',faction:'Umbra'},
+    {key:'luna',name:'Luna',icon:'🌙',cls:'Priest',hpG:.7,atkG:1.1,skill:'Moonlight',faction:'Chrono'},
+    {key:'volt',name:'Volt',icon:'💥',cls:'Brawler',hpG:1.1,atkG:1.3,skill:'Thunder Fist',faction:'Verdant'},
+    {key:'cinder',name:'Cinder',icon:'🌋',cls:'Warlock',hpG:.6,atkG:1.4,skill:'Inferno',faction:'Void'},
+    {key:'glacier',name:'Glacier',icon:'🧊',cls:'Paladin',hpG:1.2,atkG:1.0,skill:'Frozen Oath',faction:'Chrono'},
+    {key:'neon',name:'Neon',icon:'👾',cls:'Hacker',hpG:.7,atkG:1.5,skill:'Glitch',faction:'Void'},
+    {key:'aurora',name:'Aurora',icon:'🌈',cls:'Druid',hpG:.9,atkG:1.2,skill:'Aurora Beam',faction:'Chrono'},
   ];
 
   const BOSSES = [
@@ -51,6 +57,9 @@
     {id:'big_wallet',title:'Big Wallet',desc:'Hold 5000 gold',check:s=>s.gold>=5000,reward:10},
     {id:'legendary',title:'Legendary',desc:'Pull a legendary hero',check:s=>s.heroes.some(h=>h.rarity==='legendary'||h.rarity==='mythic'),reward:30},
     {id:'first_ult',title:'Ultimate',desc:'Unleash an ultimate attack',check:s=>s.ultsUsed>=1,reward:15},
+    {id:'tower_10',title:'Tower Climber',desc:'Reach tower floor 10',check:s=>s.towerFloor>=10,reward:25},
+    {id:'codex_full',title:'Collector',desc:'Collect all 12 heroes',check:s=>s.heroes.length>=12,reward:50},
+    {id:'guild_5',title:'Guild Lord',desc:'Reach guild level 5',check:s=>(s.guildLevel||1)>=5,reward:40},
   ];
 
   const SHOP_ITEMS = [
@@ -71,6 +80,21 @@
   ];
   const LIMITED_BANNER = {id:'lunar_spark',name:'Lunar Spark',desc:'Mythic chance x3 24h',endsAt:Date.now()+24*60*60*1000,active:true};
 
+  /* ── QUEST POOL ──────────────────────────────── */
+  const QUEST_POOL = [
+    {id:'q_defeat_10',desc:'Defeat 10 bosses',target:10,reward:{gems:50},track:'bosses'},
+    {id:'q_attack_50',desc:'Attack 50 times',target:50,reward:{gold:1000},track:'attacks'},
+    {id:'q_arena_3',desc:'Win 3 arena matches',target:3,reward:{gems:30},track:'arena'},
+    {id:'q_offline',desc:'Collect offline earnings',target:1,reward:{gold:500},track:'offline'},
+    {id:'q_pull_3',desc:'Pull 3 heroes',target:3,reward:{shard:1},track:'pulls'},
+    {id:'q_enhance_2',desc:'Enhance 2 gear',target:2,reward:{gold:200},track:'enhances'},
+  ];
+
+  /* ── TOWER ───────────────────────────────────── */
+  const TOWER_FLOORS = 100;
+  function towerFloorPower(floor) { return Math.floor(500 * Math.pow(1.15, floor - 1)); }
+  const TOWER_REWARDS = {10:{gems:50,gold:1000},20:{gems:100,gold:2500},30:{gems:150,gold:5000},40:{gems:200,gold:10000},50:{gems:300,gold:20000,gear:true},60:{gems:400,gold:30000},70:{gems:500,gold:50000},80:{gems:600,gold:75000},90:{gems:800,gold:100000},100:{gems:1000,gold:200000,gear:true}};
+
   /* ── SAVE ───────────────────────────────────── */
   let save = load();
   const limitedBanner = LIMITED_BANNER;
@@ -90,6 +114,12 @@
       achievements:{},settings:{sound:true,music:true},
       firstRun:true,offlineEarningsShown:false,skins:{},skinEquipped:{},
       lifetimeAttacks:0,lifetimeBosses:0,lifetimeGold:0,lifetimeGemsSpent:0,highestStage:0,
+      gearInventory:[],
+      towerFloor:0,
+      guildName:'',guildLevel:1,guildXp:0,raidBossHp:null,raidBossMaxHp:null,
+      quests:[],questDate:'',questProgress:{},
+      rateUpFeatured:null,rateUpDate:'',
+      musicPlaying:false,
     };
   }
 
@@ -107,6 +137,27 @@
     return b;
   }
 
+  function getFactionBonus(squadKeys) {
+    const factionCount = {};
+    squadKeys.forEach(k => {
+      const h = save.heroes.find(x => x.key === k);
+      if (!h) return;
+      const t = HERO_TEMPLATES.find(x => x.key === h.base);
+      if (t && t.faction) factionCount[t.faction] = (factionCount[t.faction]||0) + 1;
+    });
+    let bonus = 1;
+    for (const f in factionCount) {
+      if (factionCount[f] >= 3) bonus = 1.2;
+    }
+    return bonus;
+  }
+
+  function hasFactionAdvantage(attackerBase, defenderFaction) {
+    const t = HERO_TEMPLATES.find(x => x.key === attackerBase);
+    if (!t || !t.faction || !defenderFaction) return false;
+    return FACTION_WHEEL[t.faction] === defenderFaction;
+  }
+
   function squadPower() {
     const sq = save.squad.slice(0,4);
     if (!sq.length) return 1;
@@ -114,14 +165,17 @@
     sq.forEach(k => {
       const h = save.heroes.find(x => x.key === k);
       if (!h) return;
-      const t = HERO_TEMPLATES.find(x => x.key === k.split('_')[0]);
+      const t = HERO_TEMPLATES.find(x => x.key === h.base);
       if (!t) return;
       const l = h.level || 1;
       const m = RARITY_MUL[h.rarity] || 1;
-      p += t.atkG * 5 * l * m;
+      const starMult = 1 + ((h.stars||1) - 1) * 0.5;
+      p += t.atkG * 5 * l * m * starMult;
     });
-    const bonus = (currentBoss()?.chapter || 1) >= 4 ? 1.25 : 1;
-    return Math.max(1, p * bonus);
+    const factionBonus = getFactionBonus(sq);
+    const guildBonus = 1 + ((save.guildLevel||1) - 1) * 0.02;
+    const chapterBonus = (currentBoss()?.chapter || 1) >= 4 ? 1.25 : 1;
+    return Math.max(1, Math.floor(p * factionBonus * guildBonus * chapterBonus));
   }
 
   function remainingEnergy() {
@@ -135,7 +189,7 @@
   function energyPct() { return Math.floor((save.energy / save.maxEnergy) * 100); }
 
   /* ── HERO ROLL / GACHA ──────────────────────── */
-  function rollHero() {
+  function rollHero(isRateUp) {
     save.pity++;
     const sum = Object.values(RARITY_WEIGHTS).reduce((a,b)=>a+b,0);
     let r = Math.random() * sum, acc = 0, rarity = 'common';
@@ -148,16 +202,29 @@
     if (limitedBanner.active && Date.now() < limitedBanner.endsAt && (rarity==='legendary'||rarity==='mythic')) {
       if (Math.random() < 0.75) rarity = 'mythic';
     }
-    const t = HERO_TEMPLATES[Math.floor(Math.random() * HERO_TEMPLATES.length)];
-    return {key:t.key+'_'+Date.now()+'_'+Math.floor(Math.random()*9999),base:t.key,name:t.name,icon:t.icon,cls:t.cls,rarity,level:1,xp:0,owned:true};
+    let templates = HERO_TEMPLATES;
+    if (isRateUp && save.rateUpFeatured && RARITY_ORDER.indexOf(rarity) >= RARITY_ORDER.indexOf('epic')) {
+      if (Math.random() < 0.5) {
+        const feat = HERO_TEMPLATES.find(t => t.key === save.rateUpFeatured);
+        if (feat) templates = [feat];
+      }
+    }
+    const t = templates[Math.floor(Math.random() * templates.length)];
+    return {key:t.key+'_'+Date.now()+'_'+Math.floor(Math.random()*9999),base:t.key,name:t.name,icon:t.icon,cls:t.cls,rarity,level:1,xp:0,owned:true,stars:1,dupes:0,shards:{collected:0,awakened:0}};
   }
 
   function giveHero(baseKey, forcedRarity) {
     const t = HERO_TEMPLATES.find(x => x.key === baseKey);
     if (!t) return;
-    const h = {key:t.key+'_'+Date.now(),base:t.key,name:t.name,icon:t.icon,cls:t.cls,rarity:forcedRarity||'common',level:1,xp:0,owned:true};
+    const h = {key:t.key+'_'+Date.now(),base:t.key,name:t.name,icon:t.icon,cls:t.cls,rarity:forcedRarity||'common',level:1,xp:0,owned:true,stars:1,dupes:0,shards:{collected:0,awakened:0}};
     save.heroes.push(h);
     return h;
+  }
+
+  function addShardsForDupe(hero, rarity) {
+    if (!hero.shards) hero.shards = {collected:0,awakened:0};
+    const shardAmt = {common:1,rare:1,epic:2,legendary:5,mythic:10};
+    hero.shards.collected = (hero.shards.collected||0) + (shardAmt[rarity]||1);
   }
 
   /* ── SQUAD ──────────────────────────────────── */
@@ -168,28 +235,200 @@
   }
   function unequipSquad(key) { save.squad = save.squad.filter(k => k !== key); persist(); renderHeroes(); }
 
+  /* ── STAR ASCENSION ──────────────────────────── */
+  const STAR_COST = [0,0,1,2,3,5,7]; // index = target star, value = dupes needed
+  function ascendHero(heroKey) {
+    const h = save.heroes.find(x => x.key === heroKey);
+    if (!h) return notify('Hero not found');
+    const curStars = h.stars || 1;
+    if (curStars >= 6) return notify('Already max stars!');
+    const cost = STAR_COST[curStars + 1];
+    if ((h.dupes||0) < cost) return notify(`Need ${cost} dupes, have ${h.dupes||0}`);
+    h.dupes -= cost;
+    h.stars = curStars + 1;
+    persist(); renderHeroes(); renderSquad();
+    notify(`⭐ ${h.name} ascended to ${h.stars}★!`);
+    playSfx('rare');
+  }
+
+  /* ── AWAKEN ──────────────────────────────────── */
+  function awakenHero(heroKey) {
+    const h = save.heroes.find(x => x.key === heroKey);
+    if (!h) return notify('Hero not found');
+    if (!h.shards) h.shards = {collected:0,awakened:0};
+    if (h.shards.collected < 10) return notify(`Need 10 shards, have ${h.shards.collected}`);
+    h.shards.collected -= 10;
+    h.shards.awakened = (h.shards.awakened||0) + 1;
+    persist(); renderHeroes();
+    notify(`🌟 ${h.name} awakened! +5% all stats (Lv.${h.shards.awakened})`);
+    playSfx('ult');
+  }
+
   /* ── SUMMON ─────────────────────────────────── */
-  function doPull(premium) {
-    const cost = premium ? 10 : 100;
+  function doPull(premium, isRateUp) {
+    const cost = isRateUp ? (premium ? 30 : 500) : (premium ? 10 : 100);
     const cur = premium ? 'gems' : 'gold';
     if (save[cur] < cost) return notify('Not enough ' + cur);
     save[cur] -= cost;
+    if (cur === 'gems') save.lifetimeGemsSpent = (save.lifetimeGemsSpent||0) + cost;
     save.pulls++;
     const count = premium ? 1 : 5;
     const results = [];
-    for (let i = 0; i < count; i++) { const h = rollHero(); save.heroes.push(h); results.push(h); }
-    if (premium) {
+    for (let i = 0; i < count; i++) {
+      let h = rollHero(isRateUp);
+      /* Check for duplicate -> shards instead */
+      const existing = save.heroes.find(x => x.base === h.base);
+      if (existing) {
+        existing.dupes = (existing.dupes||0) + 1;
+        addShardsForDupe(existing, h.rarity);
+        results.push({...h, isDupe:true});
+      } else {
+        save.heroes.push(h);
+        results.push(h);
+      }
+    }
+    /* Pity system for premium/rate-up */
+    if (premium || isRateUp) {
       save.pity++;
-      if (save.pity >= 10) { for (let i = 0; i < 5; i++) { const h = rollHero(); save.heroes.push(h); results.push(h); } save.pity = 0; }
+      if (save.pity >= 10) {
+        for (let i = 0; i < (count === 1 ? 1 : 5); i++) {
+          let h = rollHero(isRateUp);
+          const existing = save.heroes.find(x => x.base === h.base);
+          if (existing) {
+            existing.dupes = (existing.dupes||0) + 1;
+            addShardsForDupe(existing, h.rarity);
+            results.push({...h, isDupe:true});
+          } else {
+            save.heroes.push(h);
+            results.push(h);
+          }
+        }
+        save.pity = 0;
+        notify('✨ Pity guaranteed pull!');
+      }
     } else { save.pity = 0; }
-    const best = results.reduce((a,b) => ['mythic','legendary','epic','rare','common'].indexOf(a.rarity) < ['mythic','legendary','epic','rare','common'].indexOf(b.rarity) ? a : b, results[0]);
-    notify(best.rarity==='legendary'||best.rarity==='mythic' ? '⭐ ' + best.name + ' (' + best.rarity + ')!' : 'Best: ' + best.rarity);
-    persist(); renderHeroes(); renderSummonResults(results); renderHud(); updatePity();
+
+    /* Progress quests */
+    trackQuestProgress('pulls', count);
+
+    const best = results.reduce((a,b) => RARITY_ORDER.indexOf(a.rarity) < RARITY_ORDER.indexOf(b.rarity) ? a : b, results[0]);
+    if (!best.isDupe) {
+      notify(best.rarity==='legendary'||best.rarity==='mythic' ? '⭐ ' + best.name + ' (' + best.rarity + ')!' : 'Best: ' + best.rarity);
+    } else {
+      notify('Dupe: ' + best.name + ' → shards +' + ({common:1,rare:1,epic:2,legendary:5,mythic:10}[best.rarity]||1));
+    }
+    persist(); renderHeroes(); enhancedSummonAnimation(results); renderHud(); updatePity();
   }
 
   function updatePity() {
     const el = $('#pityCount'); if (el) el.textContent = save.pity;
     const el2 = $('#pityProgress'); if (el2) el2.textContent = Math.min(100, Math.floor((save.pity / 10) * 100));
+  }
+
+  /* ── ENHANCED SUMMON ANIMATION ───────────────── */
+  function enhancedSummonAnimation(results) {
+    const res = $('#summonResult');
+    if (!res) return;
+    res.innerHTML = '';
+    playSfx('pull');
+
+    results.forEach((h, i) => {
+      const t = HERO_TEMPLATES.find(x => x.key === h.base);
+      const rarity = h.rarity;
+      const delay = i * 500;
+
+      setTimeout(() => {
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'margin:10px auto;text-align:center;position:relative';
+
+        /* Orb animation */
+        const orb = document.createElement('div');
+        orb.style.cssText = 'width:80px;height:80px;border-radius:50%;margin:0 auto;position:relative;overflow:hidden;transition:all 0.5s;border:3px solid ' + RARITY_COLORS[rarity];
+        orb.style.background = 'radial-gradient(circle, ' + RARITY_COLORS[rarity] + '22, transparent)';
+
+        /* Rarity-specific effects */
+        if (rarity === 'common') {
+          orb.style.transform = 'scale(0)';
+          setTimeout(() => { orb.style.transform = 'scale(1)'; }, 50);
+          setTimeout(() => { orb.style.borderColor = '#9ca3af'; }, 200);
+        } else if (rarity === 'rare') {
+          orb.style.animation = 'spin 0.6s ease-out';
+          spawnParticles(wrapper, RARITY_COLORS[rarity], 8);
+        } else if (rarity === 'epic') {
+          orb.style.transform = 'scale(0)';
+          setTimeout(() => { orb.style.transform = 'scale(1.2)'; wrapper.style.filter = 'brightness(1.5)'; }, 50);
+          setTimeout(() => { orb.style.transform = 'scale(1)'; wrapper.style.filter = ''; }, 300);
+          screenFlash(RARITY_COLORS[rarity], 200);
+          spawnParticles(wrapper, RARITY_COLORS[rarity], 15);
+        } else if (rarity === 'legendary') {
+          orb.style.transform = 'scale(0)';
+          setTimeout(() => { orb.style.transform = 'scale(1.3)'; wrapper.style.filter = 'brightness(2)'; screenFlash('#fbbf24', 300); spawnParticles(wrapper, '#fbbf24', 25); vibrate(30); playSfx('rare'); }, 50);
+          setTimeout(() => { orb.style.transform = 'scale(1)'; wrapper.style.filter = ''; }, 400);
+        } else if (rarity === 'mythic') {
+          orb.style.transform = 'scale(0)';
+          setTimeout(() => {
+            orb.style.transform = 'scale(1.5)';
+            wrapper.style.filter = 'brightness(3)';
+            screenFlash('#f472b6', 500);
+            spawnParticles(wrapper, '#f472b6', 40);
+            spawnParticles(wrapper, '#fbbf24', 20);
+            vibrate(50);
+            playSfx('rare');
+            /* Rainbow border flash */
+            let hue = 0;
+            const rainbow = setInterval(() => { hue = (hue + 30) % 360; orb.style.borderColor = 'hsl(' + hue + ',100%,70%)'; }, 80);
+            setTimeout(() => { clearInterval(rainbow); orb.style.borderColor = RARITY_COLORS[rarity]; }, 1500);
+          }, 50);
+        }
+
+        const iconEl = document.createElement('div');
+        iconEl.style.cssText = 'font-size:36px;line-height:80px;text-align:center';
+        iconEl.textContent = (t && t.icon) || '?';
+        orb.appendChild(iconEl);
+        wrapper.appendChild(orb);
+
+        const nameEl = document.createElement('div');
+        nameEl.style.cssText = 'font-weight:700;margin-top:8px;font-size:14px';
+        nameEl.textContent = h.isDupe ? (h.name + ' (Dupe!)') : h.name;
+        wrapper.appendChild(nameEl);
+
+        const rarityEl = document.createElement('div');
+        rarityEl.style.cssText = 'font-size:11px;color:' + RARITY_COLORS[rarity] + ';text-transform:uppercase;letter-spacing:1px';
+        rarityEl.textContent = h.isDupe ? (rarity + ' → shards') : rarity;
+        wrapper.appendChild(rarityEl);
+
+        /* Faction display */
+        if (t && t.faction) {
+          const facEl = document.createElement('div');
+          facEl.style.cssText = 'font-size:10px;color:' + (FACTION_COLORS[t.faction]||'#aaa') + ';margin-top:2px';
+          facEl.textContent = (FACTION_ICONS[t.faction]||'') + ' ' + t.faction;
+          wrapper.appendChild(facEl);
+        }
+
+        res.appendChild(wrapper);
+      }, delay);
+    });
+    updatePity();
+  }
+
+  function screenFlash(color, duration) {
+    const flash = document.createElement('div');
+    flash.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:' + color + ';opacity:0.3;z-index:999;pointer-events:none;transition:opacity ' + (duration||200) + 'ms';
+    document.body.appendChild(flash);
+    setTimeout(() => { flash.style.opacity = '0'; setTimeout(() => flash.remove(), 300); }, 50);
+  }
+
+  function spawnParticles(parent, color, count) {
+    for (let i = 0; i < (count||10); i++) {
+      const p = document.createElement('div');
+      const x = Math.random() * 100;
+      const y = Math.random() * 100;
+      const size = 4 + Math.random() * 8;
+      p.style.cssText = 'position:absolute;left:' + x + '%;top:' + y + '%;width:' + size + 'px;height:' + size + 'px;border-radius:50%;background:' + color + ';opacity:1;pointer-events:none;animation:particleFly ' + (0.5+Math.random()*0.8) + 's ease-out forwards';
+      p.style.boxShadow = '0 0 6px ' + color;
+      parent.appendChild(p);
+      setTimeout(() => p.remove(), 1500);
+    }
   }
 
   /* ── SHOP ───────────────────────────────────── */
@@ -245,6 +484,85 @@
     c.innerHTML = html;
   }
 
+  /* ── QUESTS ──────────────────────────────────── */
+  function initQuests() {
+    const today = new Date().toDateString();
+    if (save.questDate === today && save.quests.length > 0) return;
+    const pool = [...QUEST_POOL];
+    const picked = [];
+    for (let i = 0; i < 3 && pool.length > 0; i++) {
+      const idx = Math.floor(Math.random() * pool.length);
+      picked.push(pool.splice(idx, 1)[0]);
+    }
+    save.quests = picked.map(q => ({
+      id: q.id,
+      desc: q.desc,
+      target: q.target,
+      reward: q.reward,
+      track: q.track,
+      progress: 0,
+      claimed: false,
+    }));
+    save.questDate = today;
+    save.questProgress = {};
+    persist();
+  }
+
+  function trackQuestProgress(type, amount) {
+    save.quests.forEach(q => {
+      if (q.claimed) return;
+      if (q.track === type) {
+        q.progress = Math.min(q.target, (q.progress||0) + (amount||1));
+      }
+    });
+    persist();
+  }
+
+  function claimQuest(questId) {
+    const q = save.quests.find(x => x.id === questId);
+    if (!q) return;
+    if (q.claimed) return notify('Already claimed');
+    if ((q.progress||0) < q.target) return notify('Not complete yet (' + (q.progress||0) + '/' + q.target + ')');
+    q.claimed = true;
+    if (q.reward.gold) { save.gold += q.reward.gold; }
+    if (q.reward.gems) { save.gems += q.reward.gems; }
+    if (q.reward.shard) {
+      /* Random shard reward */
+      const randHero = save.heroes.length > 0 ? save.heroes[Math.floor(Math.random()*save.heroes.length)] : null;
+      if (randHero) {
+        if (!randHero.shards) randHero.shards = {collected:0,awakened:0};
+        randHero.shards.collected = (randHero.shards.collected||0) + q.reward.shard;
+      }
+    }
+    persist(); renderQuests(); renderHud();
+    notify('Quest complete! 🎉');
+    playSfx('coin');
+  }
+
+  function renderQuests() {
+    const el = $('#questPanel');
+    if (!el) return;
+    initQuests();
+    let html = '';
+    save.quests.forEach(q => {
+      const done = q.claimed;
+      const pct = Math.min(100, Math.floor(((q.progress||0) / q.target) * 100));
+      html += '<div class="item" style="opacity:' + (done?0.6:1) + '">'
+        + '<div class="meta" style="flex:1"><div class="title">' + q.desc + '</div>'
+        + '<div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:4px">'
+        + '<div class="hp-bar" style="height:6px;margin:0"><div class="hp-fill" style="width:' + pct + '%;background:var(--gold)"></div></div>'
+        + '<span style="margin-top:2px;display:inline-block">' + (q.progress||0) + '/' + q.target + '</span>'
+        + '</div></div>'
+        + '<div class="action">'
+        + (done ? '<span style="color:var(--green);font-size:18px">✅</span>'
+          : (pct >= 100
+            ? '<button class="btn btn-sm" onclick="game.claimQuest(\'' + q.id + '\')">Claim</button>'
+            : '<button class="btn btn-sm btn-ghost" disabled>' + (q.progress||0) + '/' + q.target + '</button>'))
+        + '</div></div>';
+    });
+    el.innerHTML = html;
+  }
+
   /* ── ACHIEVEMENTS ───────────────────────────── */
   function checkAchievements() {
     let changed = false;
@@ -260,147 +578,245 @@
   }
 
   /* ── ATTACK ─────────────────────────────────── */
-    function attack() {
-      const now = Date.now();
-      if (remainingEnergy() < 1) return notify('No energy ⏳');
-      const rage = save.bossHp && save.bossMaxHp && save.bossHp < save.bossMaxHp * 0.25;
-      const cost = rage ? 2 : 1;
-      if (save.energy < cost) return notify('Boss rage drains double energy!');
-      save.energy -= cost;
-      save.energyTs = now;
-      save.attackCount++;
-      save.lifetimeAttacks = (save.lifetimeAttacks||0) + 1;
-      save.passXp += 2;
-      incCombo();
-      let boss = currentBoss();
-      if (!save.bossHp) { save.bossMaxHp = boss.hp; save.bossHp = boss.hp; }
-      const isCrit = Math.random() < 0.15;
-      let dmg = Math.floor(squadPower() * comboBonus() * (1 + Math.random() * 0.3));
-      if (isCrit) { dmg = Math.floor(dmg * 2); notify('💥 CRIT! x2'); vibrate(30); playSfx('ult'); }
-      save.bossHp -= dmg;
-      spawnDmg(dmg, isCrit);
-      bossHitAnim();
-      playSfx('attack');
-      if (rage) vibrate(15);
-      if (save.bossHp <= 0) { defeatBoss(); }
-      persist(); renderHud(); renderCampaign(); checkAchievements(); renderCombo();
-      animateNum('gold', save.gold, 300);
-      if (save.attackCount === 1) setTimeout(quickGacha, 700);
-    }
-
-    function ultAttack() {
-      if (save.attackCount < 100) return notify('Charge more (' + save.attackCount + '/100)');
-      save.attackCount -= 100;
-      save.ultsUsed = (save.ultsUsed || 0) + 1;
-      let boss = currentBoss();
-      if (!save.bossHp) { save.bossMaxHp = boss.hp; save.bossHp = boss.hp; }
-      const dmg = Math.floor(squadPower() * 5 * comboBonus() * (1 + Math.random() * 0.5));
-      save.bossHp -= dmg;
-      spawnDmg(dmg, true);
-      bossHitAnim();
-      vibrate(50);
-      playSfx('ult');
-      playSfx('victory');
-      if (save.bossHp <= 0) { defeatBoss(); }
-      persist(); renderHud(); renderCampaign(); checkAchievements();
-      notify('💥 ULTIMATE! -' + dmg + ' damage!');
-      animateNum('gold', save.gold, 300);
-    }
-
-    function defeatBoss() {
-      const boss = currentBoss();
-      save.gold += boss.gold;
-      save.passXp += 10;
-      save.stage++;
-      save.lifetimeBosses = (save.lifetimeBosses||0) + 1;
-      save.lifetimeGold = (save.lifetimeGold||0) + boss.gold;
-      save.highestStage = Math.max(save.highestStage||0, save.stage);
-      /* Gear drop on defeat */
-      const gearTypes = ['weapon','armor','relic'];
-      const gearNames = {weapon:['Neon Blade','Void Sword','Crystal Fang','Plasma Cutter','Shadow Dagger'],
-        armor:['Phantom Plate','Void Mantle','Crystal Shell','Neon Mail','Obsidian Guard'],
-        relic:['Soul Gem','Eclipse Orb','Rune Stone','Chrono Core','Star Amulet']};
-      const gt = gearTypes[Math.floor(Math.random()*gearTypes.length)];
-      const gn = gearNames[gt][Math.floor(Math.random()*gearNames[gt].length)];
-      const gr = Math.random()<0.1?'rare':Math.random()<0.25?'uncommon':'common';
-      const gStats = {common:{atk:2,hp:10},uncommon:{atk:5,hp:25},rare:{atk:12,hp:60}};
-      const g = {id:'gear_'+Date.now(),name:gn,type:gt,rarity:gr,atk:gStats[gr].atk,hp:gStats[gr].hp};
-      if (!save.gearInventory) save.gearInventory = [];
-      save.gearInventory.push(g);
-
-      notify('🏆 ' + boss.name + ' defeated! +' + boss.gold + ' gold  🎒 ' + gn + ' [' + gr + ']');
-      playSfx('victory');
-      vibrate(40);
-      animateNum('gold', save.gold, 400);
-      save.bossHp = null; save.bossMaxHp = null;
-      persist(); checkAchievements();
-    }
-
-  function spawnDmg(dmg, isCrit) {
-    const area = $('#bossArea');
-    if (!area) return;
-    const el = document.createElement('div');
-    el.className = 'dmg' + (isCrit ? ' dmg-crit' : '');
-    el.textContent = (isCrit ? '💥 ' : '-') + dmg;
-    if (isCrit) el.style.fontSize = '36px';
-    area.appendChild(el);
-    if (isCrit) {
-      const flash = document.createElement('div');
-      flash.className = 'crit-flash';
-      document.body.appendChild(flash);
-      setTimeout(() => flash.remove(), 200);
-    }
-    setTimeout(() => el.remove(), 900);
-  }
-
-  function renderCombo() {
-    const el = $('#comboDisplay');
-    if (!el) return;
-    const c = getCombo();
-    if (c >= 3) {
-      el.textContent = '🔥 ' + c + 'x combo';
-      el.style.opacity = '1';
-      el.classList.add('combo-active');
-      setTimeout(() => el.classList.remove('combo-active'), 300);
-    } else {
-      el.style.opacity = '0';
-    }
-  }
-
-  function renderGearInventory() {
-    const list = $('#gearInventoryList');
-    if (!list) return;
-    const gi = save.gearInventory || [];
-    list.innerHTML = gi.length ? '' : '<div style="font-size:11px;color:rgba(255,255,255,0.3);padding:8px;text-align:center">No gear yet. Defeat bosses to earn equipment!</div>';
-    gi.forEach(g => {
-      const el = document.createElement('div');
-      el.className = 'gear-card';
-      const typeIcons = {weapon:'⚔️',armor:'🛡️',relic:'🔮'};
-      const r = g.rarity || 'common';
-      el.innerHTML = '<span>' + (typeIcons[g.type]||'📦') + '</span><span style="flex:1">' + g.name + '</span><span class="gear-rarity ' + r + '">' + r + '</span><span style="font-size:10px;color:rgba(255,255,255,0.4)">+' + g.atk + 'atk +' + g.hp + 'hp</span>';
-      list.appendChild(el);
-    });
-  }
-
-  function bossHitAnim() {
-    const area = $('#bossArea');
-    if (!area) return;
-    area.classList.add('hit');
-    setTimeout(() => area.classList.remove('hit'), 400);
-  }
-
-  function calcOffline() {
+  function attack() {
     const now = Date.now();
-    const sec = Math.min(43200, Math.floor((now - (save.offlineTs || now)) / 1000));
-    if (sec > 0) {
-      const gold = Math.floor(sec * squadPower() * 0.5);
-      save.gold += gold; save.offlineTs = now; persist();
-      return {seconds:sec, gold:gold};
+    if (remainingEnergy() < 1) return notify('No energy ⏳');
+    const rage = save.bossHp && save.bossMaxHp && save.bossHp < save.bossMaxHp * 0.25;
+    const cost = rage ? 2 : 1;
+    if (save.energy < cost) return notify('Boss rage drains double energy!');
+    save.energy -= cost;
+    save.energyTs = now;
+    save.attackCount++;
+    save.lifetimeAttacks = (save.lifetimeAttacks||0) + 1;
+    save.passXp += 2;
+    incCombo();
+    let boss = currentBoss();
+    if (!save.bossHp) { save.bossMaxHp = boss.hp; save.bossHp = boss.hp; }
+    const isCrit = Math.random() < 0.15;
+    let dmg = Math.floor(squadPower() * comboBonus() * (1 + Math.random() * 0.3));
+    if (isCrit) { dmg = Math.floor(dmg * 2); notify('💥 CRIT! x2'); vibrate(30); playSfx('ult'); }
+
+    /* Check faction advantage */
+    const sq = save.squad.slice(0,4);
+    const adv = sq.some(k => {
+      const h = save.heroes.find(x => x.key === k);
+      return h && hasFactionAdvantage(h.base, boss.faction);
+    });
+    if (adv && Math.random() < 0.3) {
+      dmg = Math.floor(dmg * 1.25);
+      notify('⚡ Faction advantage!');
     }
-    return {seconds:0, gold:0};
+
+    save.bossHp -= dmg;
+    spawnDmg(dmg, isCrit);
+    bossHitAnim();
+    playSfx('attack');
+    if (rage) vibrate(15);
+
+    /* Track quest progress */
+    trackQuestProgress('attacks', 1);
+
+    if (save.bossHp <= 0) { defeatBoss(); }
+    persist(); renderHud(); renderCampaign(); checkAchievements(); renderCombo();
+    animateNum('gold', save.gold, 300);
+    if (save.attackCount === 1) setTimeout(quickGacha, 700);
   }
 
-  /* ── SOUND ──────────────────────────────────── */
+  function ultAttack() {
+    if (save.attackCount < 100) return notify('Charge more (' + save.attackCount + '/100)');
+    save.attackCount -= 100;
+    save.ultsUsed = (save.ultsUsed || 0) + 1;
+    let boss = currentBoss();
+    if (!save.bossHp) { save.bossMaxHp = boss.hp; save.bossHp = boss.hp; }
+    const dmg = Math.floor(squadPower() * 5 * comboBonus() * (1 + Math.random() * 0.5));
+    save.bossHp -= dmg;
+    spawnDmg(dmg, true);
+    bossHitAnim();
+    vibrate(50);
+    playSfx('ult');
+    playSfx('victory');
+    if (save.bossHp <= 0) { defeatBoss(); }
+    persist(); renderHud(); renderCampaign(); checkAchievements();
+    notify('💥 ULTIMATE! -' + dmg + ' damage!');
+    animateNum('gold', save.gold, 300);
+  }
+
+  function defeatBoss() {
+    const boss = currentBoss();
+    save.gold += boss.gold;
+    save.passXp += 10;
+    save.stage++;
+    save.lifetimeBosses = (save.lifetimeBosses||0) + 1;
+    save.lifetimeGold = (save.lifetimeGold||0) + boss.gold;
+    save.highestStage = Math.max(save.highestStage||0, save.stage);
+    /* Gear drop on defeat */
+    const gearTypes = ['weapon','armor','relic'];
+    const gearNames = {weapon:['Neon Blade','Void Sword','Crystal Fang','Plasma Cutter','Shadow Dagger'],
+      armor:['Phantom Plate','Void Mantle','Crystal Shell','Neon Mail','Obsidian Guard'],
+      relic:['Soul Gem','Eclipse Orb','Rune Stone','Chrono Core','Star Amulet']};
+    const gt = gearTypes[Math.floor(Math.random()*gearTypes.length)];
+    const gn = gearNames[gt][Math.floor(Math.random()*gearNames[gt].length)];
+    const gr = Math.random()<0.1?'rare':Math.random()<0.25?'uncommon':'common';
+    const gStats = {common:{atk:2,hp:10},uncommon:{atk:5,hp:25},rare:{atk:12,hp:60}};
+    const g = {id:'gear_'+Date.now(),name:gn,type:gt,rarity:gr,atk:gStats[gr].atk,hp:gStats[gr].hp,enhance:0};
+    if (!save.gearInventory) save.gearInventory = [];
+    save.gearInventory.push(g);
+
+    /* Guild XP from boss defeats */
+    if (save.guildName) {
+      save.guildXp = (save.guildXp||0) + 10;
+      const needed = save.guildLevel * 100;
+      if (save.guildXp >= needed) {
+        save.guildXp -= needed;
+        save.guildLevel = (save.guildLevel||1) + 1;
+        notify('🏰 Guild level up! Lv.' + save.guildLevel + ' (+2% power)');
+      }
+    }
+
+    /* Track boss quest progress */
+    trackQuestProgress('bosses', 1);
+
+    notify('🏆 ' + boss.name + ' defeated! +' + boss.gold + ' gold  🎒 ' + gn + ' [' + gr + ']');
+    playSfx('victory');
+    vibrate(40);
+    animateNum('gold', save.gold, 400);
+    save.bossHp = null; save.bossMaxHp = null;
+    persist(); checkAchievements();
+  }
+
+  /* ── GEAR ENHANCEMENT ────────────────────────── */
+  const ENHANCE_COST = [0,100,250,500,1000,2000];
+  function enhanceGear(gearId) {
+    const g = save.gearInventory.find(x => x.id === gearId);
+    if (!g) return notify('Gear not found');
+    const level = g.enhance || 0;
+    if (level >= 5) return notify('Already max enhanced!');
+    const cost = ENHANCE_COST[level + 1];
+    if (save.gold < cost) return notify('Need ' + cost + ' gold');
+    save.gold -= cost;
+    g.enhance = level + 1;
+    persist(); renderGearInventory(); renderHud();
+    notify('🔧 ' + g.name + ' enhanced to +' + g.enhance + '!');
+    playSfx('coin');
+
+    /* Track quest progress */
+    trackQuestProgress('enhances', 1);
+  }
+
+  /* ── TOWER ───────────────────────────────────── */
+  function fightTowerFloor() {
+    const floor = (save.towerFloor||0) + 1;
+    if (floor > TOWER_FLOORS) return notify('🏆 Tower complete! All 100 floors cleared!');
+    const floorPower = towerFloorPower(floor);
+    const sp = squadPower();
+    if (sp < floorPower * 0.1) return notify('Too weak! Need ' + formatBig(floorPower) + ' power (have ' + formatBig(sp) + ')');
+    const win = sp >= floorPower || Math.random() < (sp / floorPower) * 0.5;
+    if (win) {
+      save.towerFloor = floor;
+      notify('🗼 Tower Floor ' + floor + ' cleared!');
+      /* Reward check */
+      const reward = TOWER_REWARDS[floor];
+      if (reward) {
+        if (reward.gems) save.gems += reward.gems;
+        if (reward.gold) save.gold += reward.gold;
+        if (reward.gear) {
+          const gearTypes = ['weapon','armor','relic'];
+          const gearNames = {weapon:['Neon Blade','Void Sword','Crystal Fang','Plasma Cutter','Shadow Dagger'],
+            armor:['Phantom Plate','Void Mantle','Crystal Shell','Neon Mail','Obsidian Guard'],
+            relic:['Soul Gem','Eclipse Orb','Rune Stone','Chrono Core','Star Amulet']};
+          const gt = gearTypes[Math.floor(Math.random()*gearTypes.length)];
+          const gn = gearNames[gt][Math.floor(Math.random()*gearNames[gt].length)];
+          const g = {id:'gear_'+Date.now(),name:gn,type:gt,rarity:'rare',atk:12,hp:60,enhance:0};
+          save.gearInventory.push(g);
+          notify('🎁 Tower reward: Rare gear!');
+        }
+        notify('🎁 Floor ' + floor + ' reward: ' + (reward.gems?'💎'+reward.gems:'') + (reward.gold?' ⚡'+reward.gold:'') + (reward.gear?' 🎒':''));
+        playSfx('victory');
+      }
+      playSfx('rare');
+    } else {
+      notify('💀 Tower Floor ' + floor + ' too tough! Try again.');
+    }
+    persist(); renderTower(); renderHud(); checkAchievements();
+  }
+
+  /* ── GUILD ──────────────────────────────────── */
+  function createGuild(name) {
+    if (!name || name.trim().length === 0) return notify('Enter a guild name');
+    save.guildName = name.trim();
+    save.guildLevel = 1;
+    save.guildXp = 0;
+    save.raidBossHp = 100000;
+    save.raidBossMaxHp = 100000;
+    persist(); renderGuild();
+    notify('🏰 Guild "' + save.guildName + '" created!');
+  }
+
+  function fightRaidBoss() {
+    if (!save.guildName) return notify('Create a guild first!');
+    if (remainingEnergy() < 1) return notify('No energy ⏳');
+    save.energy -= 1;
+    save.energyTs = Date.now();
+    if (save.raidBossHp == null || save.raidBossMaxHp == null) {
+      save.raidBossMaxHp = 100000 * (save.guildLevel||1);
+      save.raidBossHp = save.raidBossMaxHp;
+    }
+    const dmg = Math.floor(squadPower() * (1 + Math.random() * 0.5));
+    save.raidBossHp = Math.max(0, (save.raidBossHp||0) - dmg);
+    spawnDmg(dmg, false);
+    notify('⚔️ Raid boss hit! -' + dmg + ' damage');
+    if (save.raidBossHp <= 0) {
+      notify('🏰 Raid boss defeated! Guild XP +50');
+      save.guildXp = (save.guildXp||0) + 50;
+      const needed = (save.guildLevel||1) * 100;
+      if (save.guildXp >= needed) {
+        save.guildXp -= needed;
+        save.guildLevel = (save.guildLevel||1) + 1;
+        notify('🏰 Guild level up! Lv.' + save.guildLevel + ' (+2% power)');
+      }
+      save.raidBossMaxHp = 100000 * (save.guildLevel||1);
+      save.raidBossHp = save.raidBossMaxHp;
+      persist(); renderGuild(); renderHud();
+    }
+    persist(); renderGuild();
+  }
+
+  /* ── CODEX ───────────────────────────────────── */
+  function renderCodex() {
+    const el = $('#codexGrid');
+    if (!el) return;
+    let collected = 0;
+    let html = '';
+    HERO_TEMPLATES.forEach(t => {
+      const owned = save.heroes.some(h => h.base === t.key);
+      if (owned) collected++;
+      const bestHero = save.heroes.filter(h => h.base === t.key).sort((a,b) => (b.stars||1) - (a.stars||1))[0];
+      html += '<div class="hero-card' + (owned ? ' owned rarity-' + (bestHero?bestHero.rarity:'common') : '') + '" style="opacity:' + (owned?1:0.4) + '">'
+        + '<div class="badge">' + (owned ? (t.faction ? FACTION_ICONS[t.faction] : '??') : '❓') + '</div>'
+        + '<div style="font-size:28px">' + (owned ? t.icon : '❓') + '</div>'
+        + '<div style="font-size:10px;font-weight:600;margin-top:2px">' + t.name + '</div>'
+        + '<div style="font-size:9px;color:rgba(255,255,255,0.4)">' + t.cls + '</div>'
+        + (owned && bestHero ? '<div style="font-size:9px;color:' + RARITY_COLORS[bestHero.rarity] + '">' + bestHero.rarity + (bestHero.stars>1?' ★'.repeat(bestHero.stars):'') + '</div>' : '')
+        + (owned && bestHero && bestHero.shards && bestHero.shards.awakened ? '<div style="font-size:9px;color:#fbbf24">Awakened Lv.' + bestHero.shards.awakened + '</div>' : '')
+        + '</div>';
+    });
+    el.innerHTML = html;
+    const counter = $('#codexCount');
+    if (counter) counter.textContent = collected + '/' + HERO_TEMPLATES.length;
+  }
+
+  /* ── RATE-UP BANNER ──────────────────────────── */
+  function rotateRateUp() {
+    const today = new Date().toDateString();
+    if (save.rateUpDate !== today) {
+      const rand = HERO_TEMPLATES[Math.floor(Math.random() * HERO_TEMPLATES.length)];
+      save.rateUpFeatured = rand.key;
+      save.rateUpDate = today;
+      persist();
+    }
+  }
+
+  /* ── BACKGROUND MUSIC ────────────────────────── */
   let audioCtx = null;
   let musicNodes = null;
 
@@ -446,6 +862,96 @@
     } catch (e) { /* audio not available */ }
   }
 
+  function startMusic() {
+    if (!save.settings.music) return;
+    try {
+      initAudio();
+      if (musicNodes) stopMusic();
+      const ctx = audioCtx;
+      const now = ctx.currentTime;
+
+      /* C minor chord: C (261.63), Eb (311.13), G (392.00) */
+      const freqs = [261.63, 311.13, 392.00];
+      const oscillators = [];
+      const gainNode = ctx.createGain();
+      gainNode.gain.setValueAtTime(0, now);
+      gainNode.gain.linearRampToValueAtTime(0.04, now + 2);
+      gainNode.connect(ctx.destination);
+
+      /* LFO for filter modulation */
+      const lfo = ctx.createOscillator();
+      lfo.type = 'sine';
+      lfo.frequency.setValueAtTime(0.3, now);
+      const lfoGain = ctx.createGain();
+      lfoGain.gain.setValueAtTime(200, now);
+      lfo.connect(lfoGain);
+
+      freqs.forEach(f => {
+        const o = ctx.createOscillator();
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(f, now);
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.3, now);
+
+        /* Filter for each oscillator */
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(600, now);
+        filter.Q.setValueAtTime(5, now);
+
+        lfoGain.connect(filter.frequency);
+        o.connect(g);
+        g.connect(filter);
+        filter.connect(gainNode);
+
+        o.start(now);
+        oscillators.push({osc:o, gain:g, filter:filter});
+      });
+
+      lfo.start(now);
+
+      /* Loop every 8 seconds with slight variation */
+      const loopInterval = setInterval(() => {
+        const t = ctx.currentTime;
+        freqs.forEach((f, i) => {
+          if (oscillators[i]) {
+            oscillators[i].osc.frequency.setValueAtTime(f + Math.sin(t * 0.5 + i) * 2, t);
+          }
+        });
+      }, 8000);
+
+      musicNodes = {oscillators, lfo, lfoGain, gainNode, loopInterval, gainNode};
+      save.musicPlaying = true;
+    } catch (e) { /* music not available */ }
+  }
+
+  function stopMusic() {
+    if (!musicNodes) return;
+    try {
+      const ctx = audioCtx;
+      const now = ctx.currentTime;
+      musicNodes.gainNode.gain.linearRampToValueAtTime(0, now + 1);
+      setTimeout(() => {
+        musicNodes.oscillators.forEach(o => {
+          try { o.osc.stop(); } catch(e) {}
+        });
+        try { musicNodes.lfo.stop(); } catch(e) {}
+        if (musicNodes.loopInterval) clearInterval(musicNodes.loopInterval);
+        musicNodes = null;
+      }, 1200);
+    } catch (e) { musicNodes = null; }
+    save.musicPlaying = false;
+    persist();
+  }
+
+  function toggleMusic() {
+    if (save.musicPlaying) {
+      stopMusic();
+    } else {
+      startMusic();
+    }
+  }
+
   /* ── UI ─────────────────────────────────────── */
   function switchTab(id) {
     $$('.tab-panel').forEach(p => p.style.display = 'none');
@@ -457,6 +963,11 @@
     if (id === 'shop') { renderShop(); renderDaily(); }
     if (id === 'events') renderEvents();
     if (id === 'achievements') renderAchievements();
+    if (id === 'summon') { rotateRateUp(); renderSummon(); }
+    if (id === 'tower') renderTower();
+    if (id === 'guild') renderGuild();
+    if (id === 'codex') renderCodex();
+    if (id === 'quests') renderQuests();
   }
 
   function renderHud() {
@@ -471,6 +982,12 @@
     if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
     if (n >= 1e3) return (n / 1e3).toFixed(1) + 'k';
     return Math.floor(n);
+  }
+
+  function formatTime(sec) {
+    if (sec < 60) return sec + 's';
+    if (sec < 3600) return Math.floor(sec/60) + 'm ' + (sec%60) + 's';
+    return Math.floor(sec/3600) + 'h ' + Math.floor((sec%3600)/60) + 'm';
   }
 
   function renderCampaign() {
@@ -493,7 +1010,17 @@
       const el = document.createElement('div');
       el.className = 'hero-card rarity-' + r;
       if (h.owned) el.classList.add('owned');
-      el.innerHTML = '<div class="badge">' + (r[0].toUpperCase()) + '</div><div>' + (t ? t.icon : '?') + '</div><div class="stars">Lv' + (h.level||1) + '</div>';
+      const stars = h.stars || 1;
+      const starStr = '★'.repeat(Math.min(stars, 6)) + '☆'.repeat(Math.max(0, 6 - stars));
+      const factionIcon = t && t.faction ? (FACTION_ICONS[t.faction]||'') : '';
+      const factionColor = t && t.faction ? (FACTION_COLORS[t.faction]||'#aaa') : '#aaa';
+      const awakenStr = h.shards && h.shards.awakened ? ' <span style="color:#fbbf24;font-size:9px">A' + h.shards.awakened + '</span>' : '';
+      el.innerHTML = '<div class="badge">' + (r[0].toUpperCase()) + '</div>'
+        + '<div style="font-size:8px;color:' + factionColor + ';margin-top:2px">' + factionIcon + '</div>'
+        + '<div>' + (t ? t.icon : '?') + '</div>'
+        + '<div class="stars" style="font-size:8px;letter-spacing:1px">' + starStr + '</div>'
+        + '<div style="font-size:9px;color:rgba(255,255,255,0.5)">Lv' + (h.level||1) + awakenStr + '</div>';
+      el.title = (t ? t.name : '?') + ' (' + r + ') ' + stars + '★' + (h.dupes ? ' +' + h.dupes + ' dupes' : '') + (h.shards ? ' | Shards: ' + (h.shards.collected||0) + '/10' : '');
       el.onclick = () => {
         if (!save.squad.includes(h.key)) assignToSquad(h.key);
         else unequipSquad(h.key);
@@ -510,10 +1037,10 @@
         playSfx('coin');
       };
       grid.appendChild(el);
-      });
-      renderSquad();
-      renderGearInventory();
-      }
+    });
+    renderSquad();
+    renderGearInventory();
+  }
 
   function renderSquad() {
     const sl = $('#squadSlots'); if (!sl) return;
@@ -526,7 +1053,7 @@
       if (h) {
         const t = HERO_TEMPLATES.find(x => x.key === h.base);
         el.textContent = t ? t.icon : '?';
-        el.title = h.name;
+        el.title = h.name + ' (' + (h.stars||1) + '★)';
         el.onclick = () => unequipSquad(key);
       } else {
         el.textContent = '+';
@@ -550,22 +1077,30 @@
     });
   }
 
-  function renderSummon() {}
-  function renderSummonResults(results) {
-    const res = $('#summonResult'); if (!res) return;
-    res.innerHTML = '';
-    playSfx('pull');
-    results.forEach((h, i) => {
-      const t = HERO_TEMPLATES.find(x => x.key === h.base);
-      setTimeout(() => {
-        const el = document.createElement('div');
-        el.style.cssText = 'margin:10px auto;text-align:center';
-        el.innerHTML = '<div class="hero-portrait-large" style="border:3px solid ' + (RARITY_COLORS[h.rarity]||'#fff') + ';margin:0 auto">' + (t && t.icon ? t.icon : '?') + '</div><div style="font-weight:700;margin-top:6px">' + (h.name||'?') + '</div><div style="font-size:11px;color:' + (RARITY_COLORS[h.rarity]||'#aaa') + ';text-transform:uppercase">' + h.rarity + '</div>';
-        res.appendChild(el);
-        if (h.rarity === 'mythic' || h.rarity === 'legendary') playSfx('rare');
-      }, i * 350);
-    });
+  function renderSummon() {
+    rotateRateUp();
+    const res = $('#summonResult');
+    if (res) res.innerHTML = '';
+    const rateUpEl = $('#rateUpDisplay');
+    if (rateUpEl && save.rateUpFeatured) {
+      const t = HERO_TEMPLATES.find(x => x.key === save.rateUpFeatured);
+      if (t) {
+        rateUpEl.innerHTML = '<div class="card" style="text-align:center;padding:8px;margin:8px 0;border:2px solid #fbbf24;background:rgba(251,191,36,0.08)">'
+          + '<div style="font-size:11px;color:#fbbf24;font-weight:700">⭐ RATE UP BANNER ⭐</div>'
+          + '<div style="font-size:28px;margin:4px 0">' + t.icon + '</div>'
+          + '<div style="font-weight:600">' + t.name + ' ×2 Rate Up!</div>'
+          + '<div style="font-size:10px;color:rgba(255,255,255,0.5)">50% chance on epic+ pulls</div>'
+          + '<div style="display:flex;gap:8px;justify-content:center;margin-top:6px">'
+          + '<button class="btn btn-sm" onclick="game.rateUpPull(false)">⚡500 Gold</button>'
+          + '<button class="btn btn-sm" style="background:linear-gradient(135deg,#f59e0b,#ef4444)" onclick="game.rateUpPull(true)">💎30 Gems</button>'
+          + '</div></div>';
+      }
+    }
     updatePity();
+  }
+
+  function renderSummonResults(results) {
+    enhancedSummonAnimation(results);
   }
 
   function renderEvents() {
@@ -597,6 +1132,73 @@
     });
   }
 
+  /* ── TOWER RENDER ────────────────────────────── */
+  function renderTower() {
+    const el = $('#towerPanel');
+    if (!el) return;
+    const floor = (save.towerFloor||0) + 1;
+    const nextFloor = Math.min(floor, TOWER_FLOORS);
+    const power = towerFloorPower(nextFloor);
+    const sp = squadPower();
+    const canFight = sp >= power * 0.1;
+    let html = '<div class="section-title">🗼 Endless Tower</div>'
+      + '<div class="card" style="text-align:center;padding:16px">'
+      + '<div style="font-size:48px">🏯</div>'
+      + '<div style="font-size:20px;font-weight:700;margin:8px 0">Floor ' + nextFloor + ' / ' + TOWER_FLOORS + '</div>'
+      + '<div style="font-size:12px;color:rgba(255,255,255,0.6)">Current Power: ' + formatBig(sp) + ' / Need: ' + formatBig(power) + '</div>'
+      + '<div class="hp-bar" style="margin:10px 0;height:8px"><div class="hp-fill" style="width:' + Math.min(100, (sp/power)*100) + '%;background:' + (canFight?'var(--gold)':'var(--red)') + '"></div></div>'
+      + '<button class="btn" style="width:100%;margin-top:8px" onclick="game.fightTower()" ' + (canFight?'':'disabled') + '>⚔️ Fight Floor ' + nextFloor + '</button>'
+      + '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:6px">Floor cleared: ' + (save.towerFloor||0) + '</div>'
+      + '</div>'
+      + '<div class="section-title">Rewards (every 10 floors)</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:6px;padding:0 12px">';
+    for (const f in TOWER_REWARDS) {
+      const r = TOWER_REWARDS[f];
+      const cleared = (save.towerFloor||0) >= parseInt(f);
+      html += '<div class="card" style="flex:1;min-width:60px;text-align:center;padding:8px 4px;opacity:' + (cleared?0.6:1) + '">'
+        + '<div style="font-size:10px;color:var(--gold)">Floor ' + f + '</div>'
+        + '<div style="font-size:9px;color:rgba(255,255,255,0.6)">' + (r.gems?'💎'+r.gems:'') + (r.gold?' ⚡'+r.gold:'') + (r.gear?' 🎒':'') + '</div>'
+        + '<div>' + (cleared?'✅':'🔒') + '</div></div>';
+    }
+    html += '</div>';
+    el.innerHTML = html;
+  }
+
+  /* ── GUILD RENDER ────────────────────────────── */
+  function renderGuild() {
+    const el = $('#guildPanel');
+    if (!el) return;
+    if (!save.guildName) {
+      el.innerHTML = '<div class="section-title">🏰 Guild</div>'
+        + '<div class="card" style="padding:16px;text-align:center">'
+        + '<div style="font-size:48px">🏰</div>'
+        + '<div style="margin:12px 0;font-size:14px;font-weight:600">Create Your Guild</div>'
+        + '<input type="text" id="guildNameInput" placeholder="Enter guild name..." style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(124,58,237,0.3);background:rgba(124,58,237,0.1);color:#fff;text-align:center;font-size:14px;box-sizing:border-box">'
+        + '<button class="btn" style="width:100%;margin-top:8px" onclick="game.createGuild(document.getElementById(\'guildNameInput\').value)">Create Guild</button>'
+        + '</div>';
+      return;
+    }
+    const hp = save.raidBossHp != null ? save.raidBossHp : (100000 * (save.guildLevel||1));
+    const maxHp = save.raidBossMaxHp || (100000 * (save.guildLevel||1));
+    const pct = Math.max(0, Math.min(100, (hp / maxHp) * 100));
+    const needed = (save.guildLevel||1) * 100;
+    el.innerHTML = '<div class="section-title">🏰 ' + save.guildName + '</div>'
+      + '<div class="card" style="padding:12px">'
+      + '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">'
+      + '<span>Guild Lv.' + (save.guildLevel||1) + '</span><span style="color:var(--gold)">+' + ((save.guildLevel||1)*2) + '% power</span></div>'
+      + '<div class="hp-bar" style="height:6px;margin-bottom:4px"><div class="hp-fill" style="width:' + Math.min(100, ((save.guildXp||0)/needed)*100) + '%;background:var(--gold)"></div></div>'
+      + '<div style="font-size:10px;color:rgba(255,255,255,0.5)">XP: ' + (save.guildXp||0) + '/' + needed + '</div>'
+      + '</div>'
+      + '<div class="section-title">⚔️ Raid Boss</div>'
+      + '<div class="card" style="padding:12px;text-align:center">'
+      + '<div style="font-size:36px">👹</div>'
+      + '<div class="hp-bar" style="margin:8px 0"><div class="hp-fill" style="width:' + pct + '%"></div></div>'
+      + '<div style="font-size:11px;color:rgba(255,255,255,0.6)">HP: ' + formatBig(hp) + ' / ' + formatBig(maxHp) + '</div>'
+      + '<button class="btn" style="width:100%;margin-top:8px" onclick="game.fightRaid()">⚔️ Attack Raid Boss</button>'
+      + '</div>';
+  }
+
+  /* ── NOTIFY ──────────────────────────────────── */
   function notify(text) {
     const el = $('#notif');
     el.textContent = text;
@@ -624,6 +1226,75 @@
     }, 30);
   }
 
+  /* ── DMG / COMBO ─────────────────────────────── */
+  function spawnDmg(dmg, isCrit) {
+    const area = $('#bossArea');
+    if (!area) return;
+    const el = document.createElement('div');
+    el.className = 'dmg' + (isCrit ? ' dmg-crit' : '');
+    el.textContent = (isCrit ? '💥 ' : '-') + dmg;
+    if (isCrit) el.style.fontSize = '36px';
+    area.appendChild(el);
+    if (isCrit) {
+      const flash = document.createElement('div');
+      flash.className = 'crit-flash';
+      document.body.appendChild(flash);
+      setTimeout(() => flash.remove(), 200);
+    }
+    setTimeout(() => el.remove(), 900);
+  }
+
+  function bossHitAnim() {
+    const area = $('#bossArea');
+    if (!area) return;
+    area.classList.add('hit');
+    setTimeout(() => area.classList.remove('hit'), 400);
+  }
+
+  function renderCombo() {
+    const el = $('#comboDisplay');
+    if (!el) return;
+    const c = getCombo();
+    if (c >= 3) {
+      el.textContent = '🔥 ' + c + 'x combo';
+      el.style.opacity = '1';
+      el.classList.add('combo-active');
+      setTimeout(() => el.classList.remove('combo-active'), 300);
+    } else {
+      el.style.opacity = '0';
+    }
+  }
+
+  function renderGearInventory() {
+    const list = $('#gearInventoryList');
+    if (!list) return;
+    const gi = save.gearInventory || [];
+    list.innerHTML = gi.length ? '' : '<div style="font-size:11px;color:rgba(255,255,255,0.3);padding:8px;text-align:center">No gear yet. Defeat bosses to earn equipment!</div>';
+    gi.forEach(g => {
+      const el = document.createElement('div');
+      el.className = 'gear-card';
+      const typeIcons = {weapon:'⚔️',armor:'🛡️',relic:'🔮'};
+      const r = g.rarity || 'common';
+      const enhanceStr = g.enhance ? ' +' + g.enhance : '';
+      const enhancedAtk = g.enhance ? Math.floor(g.atk * (1 + g.enhance * 0.2)) : g.atk;
+      const enhancedHp = g.enhance ? Math.floor(g.hp * (1 + g.enhance * 0.2)) : g.hp;
+      el.innerHTML = '<span>' + (typeIcons[g.type]||'📦') + '</span><span style="flex:1">' + g.name + '</span><span class="gear-rarity ' + r + '">' + r + enhanceStr + '</span><span style="font-size:10px;color:rgba(255,255,255,0.4)">+' + enhancedAtk + 'atk +' + enhancedHp + 'hp</span>';
+      if (g.enhance < 5) {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-sm btn-ghost';
+        btn.textContent = '🔧 +1 (' + (ENHANCE_COST[(g.enhance||0)+1]) + '⚡)';
+        btn.onclick = (e) => { e.stopPropagation(); enhanceGear(g.id); };
+        el.appendChild(btn);
+      } else {
+        const badge = document.createElement('span');
+        badge.style.cssText = 'font-size:9px;color:var(--gold);padding:2px 6px';
+        badge.textContent = 'MAX';
+        el.appendChild(badge);
+      }
+      list.appendChild(el);
+    });
+  }
+
   /* ── COMBO SYSTEM ────────────────────────── */
   let comboCount = 0;
   let comboTs = 0;
@@ -647,7 +1318,7 @@
     setTimeout(() => {
       const forcedRoll = () => {
         const t = HERO_TEMPLATES[Math.floor(Math.random() * HERO_TEMPLATES.length)];
-        return {key:t.key+'_'+Date.now()+'_'+Math.floor(Math.random()*9999),base:t.key,name:t.name,icon:t.icon,cls:t.cls,rarity:'rare',level:1,xp:0,owned:true};
+        return {key:t.key+'_'+Date.now()+'_'+Math.floor(Math.random()*9999),base:t.key,name:t.name,icon:t.icon,cls:t.cls,rarity:'rare',level:1,xp:0,owned:true,stars:1,dupes:0,shards:{collected:0,awakened:0}};
       };
       const h = forcedRoll();
       save.heroes.push(h);
@@ -671,6 +1342,7 @@
       if (save.settings.noAds) return notify('No ads enabled');
       notify('🎬 Rewarded video +5💎');
       save.gems += 5; persist(); renderHud(); renderShop();
+      trackQuestProgress('offline', 1);
     },
     claimPass() {
       if (save.passXp >= 100) { save.passLvl++; save.passXp -= 100; persist(); notify('Pass level up!'); this.renderPass(); }
@@ -706,12 +1378,30 @@
         notify('Auto-battle on!');
       }
     },
+    /* New features */
+    fightTower() { fightTowerFloor(); },
+    fightRaid() { fightRaidBoss(); },
+    createGuild(name) { createGuild(name); },
+    ascendHero(key) { ascendHero(key); },
+    awakenHero(key) { awakenHero(key); },
+    enhanceGear(id) { enhanceGear(id); },
+    claimQuest(id) { claimQuest(id); },
+    rateUpPull(premium) { doPull(premium, true); },
+    toggleMusic() { toggleMusic(); },
+    /* Rate-up featured hero accessor */
+    getRateUpFeatured() { return save.rateUpFeatured; },
     init() {
       if (!save.bossHp) { const b = currentBoss(); save.bossMaxHp = b.hp; save.bossHp = b.hp; save.offlineTs = Date.now(); persist(); }
       const off = calcOffline();
       if (off.seconds > 0 && !save.offlineEarningsShown) { notify('Welcome back! +' + formatBig(off.gold) + '⚡'); save.offlineEarningsShown = true; persist(); }
+      /* Init quests */
+      initQuests();
+      /* Init rate-up */
+      rotateRateUp();
+      /* Start music if enabled */
+      if (save.settings.music && !save.musicPlaying) { setTimeout(startMusic, 1000); }
       renderHud(); renderCampaign(); renderHeroes(); renderSummon(); renderDaily(); renderEvents(); renderAchievements();
-      this.renderPass(); updatePity();
+      this.renderPass(); updatePity(); renderTower(); renderGuild(); renderCodex(); renderQuests();
     },
     renderHeroes() { renderHeroes(); },
     renderHud() { renderHud(); },
@@ -720,20 +1410,143 @@
       const pl = $('#passLvl'); if (pl) pl.textContent = save.passLvl;
       const px = $('#passXp'); if (px) px.textContent = save.passXp + '/100 XP';
     },
-    renderSummon() { updatePity(); },
+    renderSummon() { updatePity(); renderSummon(); },
     renderAchievements() { renderAchievements(); },
     renderEvents() { renderEvents(); },
+    renderTower() { renderTower(); },
+    renderGuild() { renderGuild(); },
+    renderCodex() { renderCodex(); },
+    renderQuests() { renderQuests(); },
   };
 
   /* ── BOOT ───────────────────────────────────── */
+  function calcOffline() {
+    const now = Date.now();
+    const sec = Math.min(43200, Math.floor((now - (save.offlineTs || now)) / 1000));
+    if (sec > 0) {
+      const gold = Math.floor(sec * squadPower() * 0.5);
+      save.gold += gold; save.offlineTs = now; persist();
+      trackQuestProgress('offline', 1);
+      return {seconds:sec, gold:gold};
+    }
+    return {seconds:0, gold:0};
+  }
+
   function boot() {
-    const levelEl = document.addEventListener || function(){}; // polyfill marker
+    /* Add CSS for animations */
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes particleFly {
+        0% { transform: translate(0,0) scale(1); opacity:1; }
+        100% { transform: translate(var(--dx),var(--dy)) scale(0); opacity:0; }
+      }
+      .hero-card .stars { font-size:8px; letter-spacing:1px; }
+      .gear-card button { font-size:9px !important; padding:2px 6px !important; }
+    `;
+    document.head.appendChild(style);
+
+    /* Inject particle fly animation with random directions via JS */
+    const particleStyle = document.createElement('style');
+    particleStyle.textContent = `
+      @keyframes particleFly {
+        0% { transform: translate(0,0) scale(1); opacity:1; }
+        100% { transform: translate(${Math.floor(Math.random()*60-30)}px,${Math.floor(Math.random()*-60-20)}px) scale(0); opacity:0; }
+      }
+    `;
+    document.head.appendChild(particleStyle);
+
+    /* Ensure all tab panels exist */
+    const neededPanels = ['tower','guild','codex','quests'];
+    neededPanels.forEach(id => {
+      if (!$('#' + id)) {
+        const panel = document.createElement('div');
+        panel.id = id;
+        panel.className = 'tab-panel';
+        panel.style.display = 'none';
+        panel.innerHTML = '<div id="' + id + 'Panel" style="padding:0 12px 120px"></div>';
+        const campaign = $('#campaign');
+        if (campaign && campaign.parentNode) {
+          campaign.parentNode.insertBefore(panel, campaign.nextSibling);
+        } else {
+          document.querySelector('.tabs')?.after(panel);
+        }
+      }
+    });
+
+    /* Ensure tab buttons exist for new panels */
+    const neededTabs = [
+      {id:'tower',icon:'🏯',label:'Tower'},
+      {id:'codex',icon:'📖',label:'Codex'},
+      {id:'quests',icon:'📋',label:'Quests'},
+    ];
+    neededTabs.forEach(({id, icon, label}) => {
+      if (!$('#mainTabs .tab[data-tab="' + id + '"]')) {
+        const btn = document.createElement('button');
+        btn.className = 'tab';
+        btn.dataset.tab = id;
+        btn.textContent = icon + ' ' + label;
+        const guildTab = $('#mainTabs .tab[data-tab="guild"]');
+        if (guildTab && guildTab.parentNode) {
+          guildTab.parentNode.insertBefore(btn, guildTab.nextSibling);
+        } else {
+          $('#mainTabs')?.appendChild(btn);
+        }
+      }
+      if (!$('#tabBarMobile .tab-btn[data-tab="' + id + '"]')) {
+        const btn = document.createElement('button');
+        btn.className = 'tab-btn';
+        btn.dataset.tab = id;
+        btn.innerHTML = '<span class="tab-icon">' + icon + '</span>' + label;
+        const guildBtn = $('#tabBarMobile .tab-btn[data-tab="guild"]');
+        if (guildBtn && guildBtn.parentNode) {
+          guildBtn.parentNode.insertBefore(btn, guildBtn.nextSibling);
+        } else {
+          $('#tabBarMobile')?.appendChild(btn);
+        }
+      }
+    });
+
+    /* Add summon rate-up display */
+    if (!$('#rateUpDisplay')) {
+      const rd = document.createElement('div');
+      rd.id = 'rateUpDisplay';
+      const summonPanel = $('#summon');
+      if (summonPanel) summonPanel.insertBefore(rd, summonPanel.firstChild);
+    }
+
+    /* Add quest panel */
+    if (!$('#questPanel')) {
+      const qp = document.createElement('div');
+      qp.id = 'questPanel';
+      qp.className = 'list';
+      const questsPanel = $('#quests');
+      if (questsPanel) questsPanel.appendChild(qp);
+    }
+
+    /* Add codex elements */
+    const codexPanel = $('#codex');
+    if (codexPanel) {
+      if (!$('#codexCount')) {
+        const header = document.createElement('div');
+        header.className = 'section-title';
+        header.innerHTML = '📖 Hero Codex (<span id="codexCount">0/12</span>)';
+        codexPanel.appendChild(header);
+      }
+      if (!$('#codexGrid')) {
+        const grid = document.createElement('div');
+        grid.id = 'codexGrid';
+        grid.className = 'hero-grid';
+        codexPanel.appendChild(grid);
+      }
+    }
+
+    /* Re-bind tab events for dynamically added elements */
     $('#mainTabs').addEventListener('click', e => { const t = e.target.closest('.tab'); if (t) switchTab(t.dataset.tab); });
     $('#tabBarMobile').addEventListener('click', e => { const b = e.target.closest('.tab-btn'); if (b) switchTab(b.dataset.tab); });
     $('#attackBtn').onclick = () => game.attack();
     $('#ultBtn').onclick = () => ultAttack();
-    $('#basicPull').onclick = () => { doPull(false); playSfx('pull'); };
-    $('#premiumPull').onclick = () => { doPull(true); playSfx('pull'); };
+    $('#basicPull').onclick = () => { doPull(false, false); playSfx('pull'); };
+    $('#premiumPull').onclick = () => { doPull(true, false); playSfx('pull'); };
     $('#watchAd').onclick = () => game.watchAd();
     $('#passClaim').onclick = () => game.claimPass();
     $('#autoBtn').onclick = () => game.toggleAuto();
@@ -756,7 +1569,7 @@
 
     /* Sound toggles */
     const snd = $('#soundToggle'); if (snd) { snd.checked = save.settings.sound; snd.onchange = () => { save.settings.sound = snd.checked; persist(); if (snd.checked) playSfx('attack'); }; }
-    const mus = $('#musicToggle'); if (mus) { mus.checked = save.settings.music; mus.onchange = () => { save.settings.music = mus.checked; persist(); }; }
+    const mus = $('#musicToggle'); if (mus) { mus.checked = save.settings.music; mus.onchange = () => { save.settings.music = mus.checked; persist(); if (mus.checked) startMusic(); else stopMusic(); }; }
 
     game.init();
     if (save.attackCount === 0) { const h = $('#helpToast'); if (h) { h.style.display = ''; setTimeout(() => h.style.display = 'none', 6000); } }
@@ -764,7 +1577,7 @@
     /* Auto energy regen tick */
     setInterval(() => { remainingEnergy(); renderHud(); if (save.energy >= save.maxEnergy && Date.now() - (save._lastFullNotif||0) > 300000) { save._lastFullNotif = Date.now(); notify('⚡ Energy full! Come back to fight!'); vibrate(20); } }, 1000);
     /* Auto UI refresh */
-    setInterval(() => { game.renderPass(); game.renderSummon(); game.renderEvents(); renderCampaign(); }, 1000);
+    setInterval(() => { game.renderPass(); game.renderSummon(); game.renderEvents(); renderCampaign(); renderTower(); renderGuild(); renderCodex(); renderQuests(); }, 1000);
     notify('⚡ Neon Legends loaded!');
   }
 
