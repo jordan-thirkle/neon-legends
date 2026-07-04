@@ -132,8 +132,6 @@
 </div>
 
 <div id="events" class="tab-panel" style="display:none">
-  <div class="section-title">📋 Daily Quests</div>
-  <div class="list" id="questList" style="padding:0 12px 8px"></div>
   <div class="section-title">Active Events</div>
   <div class="list" id="eventList"></div>
   <div class="section-title">Social</div>
@@ -143,17 +141,6 @@
       <div class="meta"><div class="title">Share on X</div><div class="desc">Post your squad and earn 50⚡</div></div>
       <div class="action"><button class="btn btn-sm btn-ghost" onclick="window.open('https://x.com/intent/post?text='+encodeURIComponent('I just pulled a rare hero in Neon Legends! ⚡ Try: ')+encodeURIComponent(location.href))">Share</button></div>
     </div>
-  </div>
-</div>
-
-<div id="tower" class="tab-panel" style="display:none">
-  <div class="section-title">🗼 Endless Tower</div>
-  <div style="padding:0 12px;text-align:center">
-    <div style="font-size:48px;margin:20px 0">🏛️</div>
-    <div style="font-size:14px">Floor <span id="towerFloor">1</span></div>
-    <div style="font-size:11px;color:rgba(255,255,255,0.5);margin:4px 0">Reward every 10 floors</div>
-    <button class="btn" id="towerBtn" style="width:100%;margin-top:8px">⚔️ Battle Floor</button>
-    <div id="towerResult" style="margin-top:8px;font-size:12px"></div>
   </div>
 </div>
 
@@ -178,8 +165,6 @@
 <div id="achievements" class="tab-panel" style="display:none">
   <div class="section-title">Medals</div>
   <div class="list" id="achievementList"></div>
-  <div class="section-title">📖 Hero Codex</div>
-  <div class="hero-grid" id="codexGrid" style="margin:0 12px 40px"></div>
   <div class="section-title">Save & Load</div>
   <div class="list" style="padding:0 12px 80px">
     <div class="item"><div class="meta"><div class="title">Export Save</div><div class="desc">Copy backup code</div></div>
@@ -235,13 +220,16 @@
   <button class="tab-btn" data-tab="summon"><span class="tab-icon">🎰</span>Summon</button>
   <button class="tab-btn" data-tab="shop"><span class="tab-icon">🛒</span>Shop</button>
   <button class="tab-btn" data-tab="events"><span class="tab-icon">🎉</span>Events</button>
-  <button class="tab-btn" data-tab="tower"><span class="tab-icon">🗼</span>Tower</button>
+  <button class="tab-btn" data-tab="tower"><span class="tab-icon">🏯</span>Tower</button>
+  <button class="tab-btn" data-tab="codex"><span class="tab-icon">📖</span>Codex</button>
+  <button class="tab-btn" data-tab="quests"><span class="tab-icon">📋</span>Quests</button>
   <button class="tab-btn" data-tab="guild"><span class="tab-icon">🏰</span>Guild</button>
   <button class="tab-btn" data-tab="achievements"><span class="tab-icon">🏅</span>Medals</button>
 </div>
 
 <div class="notif" id="notif"></div>
 
+<script src="sound.js"></script>
 <script src="game.js"></script>
 </body>
 </html>

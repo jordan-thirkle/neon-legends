@@ -421,13 +421,24 @@
   function spawnParticles(parent, color, count) {
     for (let i = 0; i < (count||10); i++) {
       const p = document.createElement('div');
-      const x = Math.random() * 100;
-      const y = Math.random() * 100;
+      const x = 20 + Math.random() * 60;
+      const y = 20 + Math.random() * 60;
+      const dx = (Math.random() - 0.5) * 80;
+      const dy = -20 - Math.random() * 60;
       const size = 4 + Math.random() * 8;
-      p.style.cssText = 'position:absolute;left:' + x + '%;top:' + y + '%;width:' + size + 'px;height:' + size + 'px;border-radius:50%;background:' + color + ';opacity:1;pointer-events:none;animation:particleFly ' + (0.5+Math.random()*0.8) + 's ease-out forwards';
-      p.style.boxShadow = '0 0 6px ' + color;
+      p.style.cssText = 'position:absolute;left:' + x + '%;top:' + y + '%;width:' + size + 'px;height:' + size + 'px;border-radius:50%;background:' + color + ';opacity:1;pointer-events:none;box-shadow:0 0 6px ' + color;
       parent.appendChild(p);
-      setTimeout(() => p.remove(), 1500);
+      const start = performance.now();
+      const duration = 400 + Math.random() * 400;
+      function animateP() {
+        const t = Math.min(1, (performance.now() - start) / duration);
+        const ease = 1 - Math.pow(1 - t, 3);
+        p.style.transform = 'translate(' + (dx * ease) + 'px,' + (dy * ease) + 'px) scale(' + (1 - ease) + ')';
+        p.style.opacity = 1 - ease;
+        if (t < 1) requestAnimationFrame(animateP);
+        else p.remove();
+      }
+      requestAnimationFrame(animateP);
     }
   }
 
@@ -826,6 +837,11 @@
 
   function playSfx(type) {
     if (!save.settings.sound) return;
+    /* Try real audio first */
+    if (typeof playReal === 'function') {
+      try { playReal(type, 0.5); return; } catch(e) {}
+    }
+    /* Fallback to synth */
     try {
       initAudio();
       const ctx = audioCtx;
@@ -1433,29 +1449,15 @@
   }
 
   function boot() {
-    /* Add CSS for animations */
+    /* Add CSS for star display */
     const style = document.createElement('style');
     style.textContent = `
-      @keyframes particleFly {
-        0% { transform: translate(0,0) scale(1); opacity:1; }
-        100% { transform: translate(var(--dx),var(--dy)) scale(0); opacity:0; }
-      }
       .hero-card .stars { font-size:8px; letter-spacing:1px; }
       .gear-card button { font-size:9px !important; padding:2px 6px !important; }
     `;
     document.head.appendChild(style);
 
-    /* Inject particle fly animation with random directions via JS */
-    const particleStyle = document.createElement('style');
-    particleStyle.textContent = `
-      @keyframes particleFly {
-        0% { transform: translate(0,0) scale(1); opacity:1; }
-        100% { transform: translate(${Math.floor(Math.random()*60-30)}px,${Math.floor(Math.random()*-60-20)}px) scale(0); opacity:0; }
-      }
-    `;
-    document.head.appendChild(particleStyle);
-
-    /* Ensure all tab panels exist */
+    /* Ensure all tab panels exist (skip if already in HTML) */
     const neededPanels = ['tower','guild','codex','quests'];
     neededPanels.forEach(id => {
       if (!$('#' + id)) {
@@ -1463,7 +1465,8 @@
         panel.id = id;
         panel.className = 'tab-panel';
         panel.style.display = 'none';
-        panel.innerHTML = '<div id="' + id + 'Panel" style="padding:0 12px 120px"></div>';
+        const innerId = id + 'Panel';
+        panel.innerHTML = '<div id="' + innerId + '" style="padding:0 12px 120px"></div>';
         const campaign = $('#campaign');
         if (campaign && campaign.parentNode) {
           campaign.parentNode.insertBefore(panel, campaign.nextSibling);
@@ -1473,7 +1476,7 @@
       }
     });
 
-    /* Ensure tab buttons exist for new panels */
+    /* Ensure tab buttons exist for new panels (skip if already in HTML) */
     const neededTabs = [
       {id:'tower',icon:'🏯',label:'Tower'},
       {id:'codex',icon:'📖',label:'Codex'},
@@ -1514,7 +1517,7 @@
       if (summonPanel) summonPanel.insertBefore(rd, summonPanel.firstChild);
     }
 
-    /* Add quest panel */
+    /* Add quest panel if not in HTML */
     if (!$('#questPanel')) {
       const qp = document.createElement('div');
       qp.id = 'questPanel';
@@ -1523,7 +1526,7 @@
       if (questsPanel) questsPanel.appendChild(qp);
     }
 
-    /* Add codex elements */
+    /* Add codex elements if not in HTML */
     const codexPanel = $('#codex');
     if (codexPanel) {
       if (!$('#codexCount')) {
