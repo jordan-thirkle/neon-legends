@@ -89,6 +89,7 @@
       passLvl:1,passXp:0,lastDaily:null,streak:0,
       achievements:{},settings:{sound:true,music:true},
       firstRun:true,offlineEarningsShown:false,skins:{},skinEquipped:{},
+      lifetimeAttacks:0,lifetimeBosses:0,lifetimeGold:0,lifetimeGemsSpent:0,highestStage:0,
     };
   }
 
@@ -268,6 +269,7 @@
       save.energy -= cost;
       save.energyTs = now;
       save.attackCount++;
+      save.lifetimeAttacks = (save.lifetimeAttacks||0) + 1;
       save.passXp += 2;
       incCombo();
       let boss = currentBoss();
@@ -310,6 +312,9 @@
       save.gold += boss.gold;
       save.passXp += 10;
       save.stage++;
+      save.lifetimeBosses = (save.lifetimeBosses||0) + 1;
+      save.lifetimeGold = (save.lifetimeGold||0) + boss.gold;
+      save.highestStage = Math.max(save.highestStage||0, save.stage);
       /* Gear drop on defeat */
       const gearTypes = ['weapon','armor','relic'];
       const gearNames = {weapon:['Neon Blade','Void Sword','Crystal Fang','Plasma Cutter','Shadow Dagger'],
@@ -674,6 +679,33 @@
     reforged() { notify('Forge placeholder.'); },
     showEnergyTimer() { notify('Energy refill in ' + Math.ceil(energyRefillAt() / 1000) + 's'); },
     claimDaily() { claimDaily(); },
+    showStats() {
+      $('#statAttacks').textContent = save.lifetimeAttacks||0;
+      $('#statBosses').textContent = save.lifetimeBosses||0;
+      $('#statUlts').textContent = save.ultsUsed||0;
+      $('#statPulls').textContent = save.pulls||0;
+      $('#statStage').textContent = Math.max(save.stage, save.highestStage||0);
+      $('#statGold').textContent = formatBig((save.lifetimeGold||0));
+      $('#statGems').textContent = save.lifetimeGemsSpent||0;
+      $('#statsOverlay').classList.add('show');
+    },
+    closeStats() { $('#statsOverlay').classList.remove('show'); },
+    /* Auto-battle */
+    autoEnabled: false,
+    autoInterval: null,
+    toggleAuto() {
+      if (this.autoEnabled) {
+        this.autoEnabled = false;
+        if (this.autoInterval) { clearInterval(this.autoInterval); this.autoInterval = null; }
+        $('#autoBtn').textContent = '▶ Auto';
+        notify('Auto-battle off');
+      } else {
+        this.autoEnabled = true;
+        this.autoInterval = setInterval(() => { if (remainingEnergy() >= 1) attack(); }, 500);
+        $('#autoBtn').textContent = '⏸ Pause';
+        notify('Auto-battle on!');
+      }
+    },
     init() {
       if (!save.bossHp) { const b = currentBoss(); save.bossMaxHp = b.hp; save.bossHp = b.hp; save.offlineTs = Date.now(); persist(); }
       const off = calcOffline();
@@ -704,6 +736,7 @@
     $('#premiumPull').onclick = () => { doPull(true); playSfx('pull'); };
     $('#watchAd').onclick = () => game.watchAd();
     $('#passClaim').onclick = () => game.claimPass();
+    $('#autoBtn').onclick = () => game.toggleAuto();
     const se = $('#exportSave');
     if (se) se.onclick = () => {
       const blob = new Blob([JSON.stringify(save)], {type:'application/json'});
@@ -729,7 +762,7 @@
     if (save.attackCount === 0) { const h = $('#helpToast'); if (h) { h.style.display = ''; setTimeout(() => h.style.display = 'none', 6000); } }
 
     /* Auto energy regen tick */
-    setInterval(() => { remainingEnergy(); renderHud(); }, 1000);
+    setInterval(() => { remainingEnergy(); renderHud(); if (save.energy >= save.maxEnergy && Date.now() - (save._lastFullNotif||0) > 300000) { save._lastFullNotif = Date.now(); notify('⚡ Energy full! Come back to fight!'); vibrate(20); } }, 1000);
     /* Auto UI refresh */
     setInterval(() => { game.renderPass(); game.renderSummon(); game.renderEvents(); renderCampaign(); }, 1000);
     notify('⚡ Neon Legends loaded!');
