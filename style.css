@@ -182,3 +182,27 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:#fff;font-famil
 /* Smooth panel transitions */
 .card,.item{transition:all .2s ease}
 .card:hover{transform:translateY(-1px)}
+
+/* Tower */
+.tower-panel{text-align:center}
+
+/* Shard count badge */
+.shard-badge{font-size:10px;color:var(--cyan);margin-left:4px}
+
+/* Ascension stars */
+.ascension-stars{font-size:14px;letter-spacing:1px;margin-top:2px}
+
+/* Quest progress bar */
+.quest-progress{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:4px}
+.quest-progress .pbar{height:4px;background:rgba(255,255,255,0.08);border-radius:2px;flex:1;overflow:hidden}
+.quest-progress .pfill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--violet));border-radius:2px;transition:width .3s}
+.quest-progress .claim-btn{font-size:10px;padding:4px 10px}
+
+/* Guild */
+.guild-card{background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid rgba(124,58,237,0.2);border-radius:14px;padding:16px;margin-bottom:12px}
+
+/* Codex */
+.codex-card{aspect-ratio:1;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:28px}
+.codex-card.unlocked{border-color:var(--violet);background:rgba(124,58,237,0.08)}
+.codex-card.locked{filter:grayscale(1);opacity:0.4}
+.codex-card .codex-label{font-size:9px;margin-top:4px;color:rgba(255,255,255,0.6)}

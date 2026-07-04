@@ -37,6 +37,7 @@
   <button class="tab" data-tab="summon">🎰 Summon</button>
   <button class="tab" data-tab="shop">🛒 Shop</button>
   <button class="tab" data-tab="events">🎉 Events</button>
+  <button class="tab" data-tab="tower">🗼 Tower</button>
   <button class="tab" data-tab="guild">🏰 Guild</button>
   <button class="tab" data-tab="achievements">🏅 Medals</button>
 </div>
@@ -129,6 +130,8 @@
 </div>
 
 <div id="events" class="tab-panel" style="display:none">
+  <div class="section-title">📋 Daily Quests</div>
+  <div class="list" id="questList" style="padding:0 12px 8px"></div>
   <div class="section-title">Active Events</div>
   <div class="list" id="eventList"></div>
   <div class="section-title">Social</div>
@@ -141,13 +144,35 @@
   </div>
 </div>
 
+<div id="tower" class="tab-panel" style="display:none">
+  <div class="section-title">🗼 Endless Tower</div>
+  <div style="padding:0 12px;text-align:center">
+    <div style="font-size:48px;margin:20px 0">🏛️</div>
+    <div style="font-size:14px">Floor <span id="towerFloor">1</span></div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.5);margin:4px 0">Reward every 10 floors</div>
+    <button class="btn" id="towerBtn" style="width:100%;margin-top:8px">⚔️ Battle Floor</button>
+    <div id="towerResult" style="margin-top:8px;font-size:12px"></div>
+  </div>
+</div>
+
 <div id="guild" class="tab-panel" style="display:none">
-  <div class="section-title">Guild</div>
-  <div class="card" style="margin:0 12px 80px">
-    <div style="text-align:center;padding:40px 0;color:rgba(255,255,255,0.5)">
-      <div style="font-size:48px;margin-bottom:10px">🏰</div>
-      <div>Coming Soon</div>
-      <div style="font-size:11px;margin-top:4px">Guild raids and cooperative battles</div>
+  <div class="section-title">🏰 Guild</div>
+  <div style="padding:0 12px;text-align:center;margin-bottom:12px">
+    <div id="guildInfo">
+      <div style="font-size:14px;font-weight:700" id="guildName">No Guild</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.5)">Level <span id="guildLvl">1</span> · XP <span id="guildXp">0</span>/<span id="guildXpNext">100</span></div>
+    </div>
+    <div class="section-title" style="margin-top:12px">⚔️ Guild Raid</div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-size:40px">🐉</div>
+        <div style="flex:1;text-align:left">
+          <div style="font-size:13px;font-weight:700">Raid Boss</div>
+          <div class="hp-bar" style="margin:4px 0"><div class="hp-fill" id="raidHp" style="width:100%"></div></div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.5)"><span id="raidHpText">100000</span> HP remaining</div>
+        </div>
+      </div>
+      <button class="btn btn-sm" id="raidBtn" style="width:100%;margin-top:8px">⚔️ Attack Raid Boss</button>
     </div>
   </div>
 </div>
@@ -155,12 +180,37 @@
 <div id="achievements" class="tab-panel" style="display:none">
   <div class="section-title">Medals</div>
   <div class="list" id="achievementList"></div>
+  <div class="section-title">📖 Hero Codex</div>
+  <div class="hero-grid" id="codexGrid" style="margin:0 12px 40px"></div>
   <div class="section-title">Save & Load</div>
   <div class="list" style="padding:0 12px 80px">
     <div class="item"><div class="meta"><div class="title">Export Save</div><div class="desc">Copy backup code</div></div>
       <div class="action"><button class="btn btn-sm btn-ghost" id="exportSave">Copy</button></div></div>
     <div class="item"><div class="meta"><div class="title">Import Save</div><div class="desc">Paste backup code</div></div>
       <div class="action"><button class="btn btn-sm btn-ghost" id="importSave">Paste</button></div></div>
+  </div>
+</div>
+
+<!-- Hero Detail Overlay -->
+<div class="overlay" id="heroDetailOverlay">
+  <div class="panel">
+    <div class="title" style="margin-bottom:12px" id="heroDetailName">Hero Name</div>
+    <div id="heroDetailContent">
+      <div style="text-align:center;font-size:48px;margin:10px 0" id="heroDetailIcon">🦸</div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-bottom:10px">
+        <div style="font-size:12px;padding:3px 8px;border-radius:6px;background:rgba(124,58,237,0.15);color:var(--violet)" id="heroDetailRarity">Rarity</div>
+        <div class="ascension-stars" id="heroDetailAscension">⭐</div>
+      </div>
+      <div class="item" style="padding:8px 10px"><div class="meta"><div class="title">Shards</div></div><span id="heroDetailShards">0</span><span class="shard-badge" id="heroDetailShardBadge"></span></div>
+      <div class="item" style="padding:8px 10px"><div class="meta"><div class="title">Level</div></div><span id="heroDetailLevel">1</span></div>
+      <div class="item" style="padding:8px 10px"><div class="meta"><div class="title">ATK</div></div><span id="heroDetailAtk">0</span></div>
+      <div class="item" style="padding:8px 10px"><div class="meta"><div class="title">HP</div></div><span id="heroDetailHp">0</span></div>
+      <div class="item" style="padding:8px 10px"><div class="meta"><div class="title">Ability</div></div><span id="heroDetailAbility" style="font-size:11px;text-align:right;max-width:180px">-</span></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn btn-sm" id="heroDetailAscendBtn" style="flex:1">⬆️ Ascend</button>
+      <button class="btn btn-sm btn-ghost" id="heroDetailCloseBtn" style="flex:1">Close</button>
+    </div>
   </div>
 </div>
 
@@ -187,6 +237,7 @@
   <button class="tab-btn" data-tab="summon"><span class="tab-icon">🎰</span>Summon</button>
   <button class="tab-btn" data-tab="shop"><span class="tab-icon">🛒</span>Shop</button>
   <button class="tab-btn" data-tab="events"><span class="tab-icon">🎉</span>Events</button>
+  <button class="tab-btn" data-tab="tower"><span class="tab-icon">🗼</span>Tower</button>
   <button class="tab-btn" data-tab="guild"><span class="tab-icon">🏰</span>Guild</button>
   <button class="tab-btn" data-tab="achievements"><span class="tab-icon">🏅</span>Medals</button>
 </div>
