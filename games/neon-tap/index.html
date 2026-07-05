@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="Neon Tap — A rhythm-based reflex game. Tap the glowing tiles to the beat in this neon-lit reaction challenge.">
+<meta property="og:title" content="Neon Tap — Reflex Game">
+<meta property="og:description" content="Tap glowing tiles, keep the combo, set high scores.">
+<title>Neon Tap — games.byjtt.com</title>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://games.byjtt.com/"},{"@type":"ListItem","position":2,"name":"Games","item":"https://games.byjtt.com/games"},{"@type":"ListItem","position":3,"name":"Neon Tap","item":"https://games.byjtt.com/games/neon-tap"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Neon Tap","description":"Rhythm-based reflex game. Tap glowing tiles to the beat.","url":"https://games.byjtt.com/games/neon-tap","applicationCategory":"Game","operatingSystem":"Web","author":{"@type":"Organization","name":"By JTT Game Studios"}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>*{margin:0;padding:0;box-sizing:border-box}
+body{background:#06030f;color:#e0d0ff;font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column}
+nav{background:rgba(124,58,237,0.12);backdrop-filter:blur(12px);padding:14px 32px;display:flex;align-items:center;gap:24px;border-bottom:1px solid rgba(124,58,237,0.25)}
+nav a{color:#b59aff;text-decoration:none;font-size:14px;font-weight:600;transition:color .2s}
+nav a:hover{color:#fff}
+nav .logo{font-size:18px;font-weight:800;color:#fff}
+nav .logo span{color:#7c3aed}
+.container{flex:1;display:flex;flex-direction:column;align-items:center;padding:20px}
+.game-header{text-align:center;margin-bottom:12px}
+.game-header h1{font-size:28px;font-weight:800;background:linear-gradient(135deg,#7c3aed,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.game-header p{color:#9a8bb5;font-size:14px;margin-top:4px}
+.controls-badge{display:inline-flex;gap:18px;margin-top:6px;font-size:12px;color:#7c3aed;flex-wrap:wrap;justify-content:center}
+.controls-badge kbd{background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.3);border-radius:4px;padding:2px 7px;font-family:inherit;font-size:11px;color:#c4b5fd}
+#game-container{width:360px;height:360px;background:#0a0418;border-radius:16px;border:1px solid rgba(124,58,237,0.2);position:relative;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;padding:8px;touch-action:none}
+.tile{border-radius:10px;cursor:pointer;transition:background .1s,transform .1s;position:relative;overflow:hidden}
+.tile:active{transform:scale(0.95)}
+.tile-0{background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.15)}
+.tile-1{background:rgba(219,39,119,0.12);border:1px solid rgba(219,39,119,0.15)}
+.tile-2{background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.15)}
+.tile-3{background:rgba(250,204,21,0.12);border:1px solid rgba(250,204,21,0.15)}
+.tile.active-0{background:rgba(124,58,237,0.8);box-shadow:0 0 30px rgba(124,58,237,0.4)}
+.tile.active-1{background:rgba(219,39,119,0.8);box-shadow:0 0 30px rgba(219,39,119,0.4)}
+.tile.active-2{background:rgba(34,211,238,0.8);box-shadow:0 0 30px rgba(34,211,238,0.4)}
+.tile.active-3{background:rgba(250,204,21,0.8);box-shadow:0 0 30px rgba(250,204,21,0.4)}
+.hud{display:flex;gap:24px;justify-content:center;margin:12px 0;font-size:14px}
+.hud span{font-weight:700}
+.hud .score{color:#7c3aed;font-size:22px}
+.hud .combo{color:#22d3ee}
+.hud .best{color:#facc15}
+#startOverlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(6,3,15,0.9);z-index:10;border-radius:16px;gap:12px;cursor:pointer}
+#startOverlay h2{font-size:22px;font-weight:800}
+#startOverlay p{color:#9a8bb5;font-size:13px}
+#leaderboard{max-width:300px;margin:12px auto}
+.more-games{width:100%;max-width:860px;margin:24px auto 0;padding-top:20px;border-top:1px solid rgba(124,58,237,0.12)}
+.more-games h3{font-size:13px;font-weight:600;color:#7c3aed;text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.more-games .game-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.more-games .game-card{padding:12px 8px;border-radius:8px;background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.1);text-align:center;text-decoration:none;color:#c4b5fd;transition:all .2s}
+.more-games .game-card:hover{background:rgba(124,58,237,0.12);border-color:#7c3aed;transform:translateY(-2px)}
+.more-games .game-card .title{font-size:12px;font-weight:600;color:#e0d0ff}
+.more-games .game-card .sub{font-size:10px;color:#7c3aed;margin-top:2px}
+footer{padding:24px;text-align:center;font-size:12px;color:#4a3f6b;border-top:1px solid rgba(124,58,237,0.08);margin-top:24px}
+footer a{color:#7c3aed;text-decoration:none}
+</style>
+</head>
+<body>
+<nav><a href="/games" class="logo">🎮 <span>Games</span></a> <a href="/games">← Portal</a></nav>
+<div class="container">
+<div class="game-header">
+<h1>💎 Neon Tap</h1>
+<p>Tap the glowing tiles. Keep the combo. Set records.</p>
+<div class="controls-badge"><kbd>Click</kbd> lit tiles · <kbd>Speed</kbd> increases · <kbd>Miss</kbd> loses combo</div>
+</div>
+<div class="hud"><span class="score">💎 <span id="scoreVal">0</span></span><span class="combo">🔥 <span id="comboVal">0</span>x</span><span class="best">🏆 Best: <span id="bestVal">0</span></span></div>
+<div id="game-container">
+<div id="startOverlay" onclick="startGame()"><h2>▶ NEON TAP</h2><p>Click or tap to start</p></div>
+<div class="tile tile-0" data-idx="0" onclick="tapTile(0)"></div>
+<div class="tile tile-1" data-idx="1" onclick="tapTile(1)"></div>
+<div class="tile tile-2" data-idx="2" onclick="tapTile(2)"></div>
+<div class="tile tile-3" data-idx="3" onclick="tapTile(3)"></div>
+</div>
+<div id="leaderboard"></div>
+<div class="more-games">
+<h3>🎮 More Games</h3>
+<div class="game-grid">
+<a href="/games/neon-legends" class="game-card"><div class="title">⚡ Neon Legends</div><div class="sub">Idle RPG</div></a>
+<a href="/games/glitchfront" class="game-card"><div class="title">🔫 Glitchfront</div><div class="sub">FPS</div></a>
+<a href="/games/helix-hex" class="game-card"><div class="title">🌀 Helix Hex</div><div class="sub">Strategy</div></a>
+<a href="/games/crown-chaser" class="game-card"><div class="title">👑 Crown Chaser</div><div class="sub">Arena</div></a>
+<a href="/games/aura-depths" class="game-card"><div class="title">⛏️ Aura Depths</div><div class="sub">Mining</div></a>
+<a href="/games/aethoria" class="game-card"><div class="title">🌍 Aethoria</div><div class="sub">MMORPG</div></a>
+<a href="/games/vibegame" class="game-card"><div class="title">🎲 VibeGame</div><div class="sub">Sandbox</div></a>
+</div></div></div>
+<footer><a href="/games">← Back to Game Portal</a> · <a href="https://games.byjtt.com">By JTT Game Studios</a></footer>
+<script src="/games/games-core.js"></script>
+<script>
+incrementPlays('neon-tap');
+let score = 0, combo = 0, bestCombo = 0, bestScore = 0, activeTile = -1, activeColor = 0, gameRunning = false, timeoutId = null, intervalId = null;
+const colors = ['#7c3aed','#db2777','#22d3ee','#facc15'];
+const colorNames = ['violet','pink','cyan','gold'];
+const tiles = document.querySelectorAll('.tile');
+const scoreEl = document.getElementById('scoreVal');
+const comboEl = document.getElementById('comboVal');
+const bestEl = document.getElementById('bestVal');
+try { bestScore = parseInt(localStorage.getItem('byjtt_games_neontap_best') || '0'); bestEl.textContent = bestScore; } catch(e) {}
+
+function startGame() {
+  document.getElementById('startOverlay').style.display = 'none';
+  score = 0; combo = 0; gameRunning = true;
+  scoreEl.textContent = '0'; comboEl.textContent = '0x';
+  nextTile();
+}
+
+function nextTile() {
+  if (!gameRunning) return;
+  const prev = activeTile;
+  if (prev >= 0) tiles[prev].className = `tile tile-${prev}`;
+  let next; do { next = Math.floor(Math.random() * 4); } while (next === prev);
+  activeTile = next; activeColor = next;
+  tiles[next].classList.add(`active-${next}`);
+  const speed = Math.max(300, 1200 - score * 2);
+  if (timeoutId) clearTimeout(timeoutId);
+  timeoutId = setTimeout(() => { if (gameRunning) missTile(); }, speed);
+}
+
+function tapTile(idx) {
+  if (!gameRunning) return;
+  if (idx === activeTile) {
+    combo++; score += Math.floor(10 * (1 + combo * 0.1));
+    scoreEl.textContent = score; comboEl.textContent = combo + 'x';
+    if (combo > bestCombo) bestCombo = combo;
+    if (score > bestScore) { bestScore = score; bestEl.textContent = score; try { localStorage.setItem('byjtt_games_neontap_best', String(score)); } catch(e) {} }
+    if (timeoutId) clearTimeout(timeoutId);
+    nextTile();
+  } else {
+    missTile();
+  }
+}
+
+function missTile() {
+  gameRunning = false;
+  if (timeoutId) clearTimeout(timeoutId);
+  if (intervalId) clearInterval(intervalId);
+  tiles.forEach(t => t.className = `tile tile-${Array.from(tiles).indexOf(t)}`);
+  submitScore('neon-tap', score);
+  if (typeof renderLeaderboard === 'function') renderLeaderboard('neon-tap', 'leaderboard');
+  const overlay = document.getElementById('startOverlay');
+  overlay.style.display = 'flex';
+  overlay.innerHTML = `<h2>Game Over</h2><p style="font-size:24px;color:#7c3aed;font-weight:800">${score} points</p><p style="color:#22d3ee">🔥 ${combo}x best combo</p><button onclick="shareOnX('neon-tap',${score})" style="padding:6px 16px;border-radius:8px;border:1px solid rgba(124,58,237,0.3);background:rgba(124,58,237,0.1);color:#fff;cursor:pointer;font-size:12px;margin-top:4px">𝕏 Share Score</button><p style="color:#9a8bb5;font-size:13px;margin-top:8px;cursor:pointer" onclick="startGame()">▶ Tap to play again</p>`;
+}
+</script>
+</body>
+</html>

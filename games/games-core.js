@@ -9,7 +9,8 @@ const GAME_IDS = {
   'aura-depths': 'Aura Depths',
   'crown-chaser': 'Crown Chaser',
   'vibegame': 'VibeGame',
-  'neon-legends': 'Neon Legends'
+  'neon-legends': 'Neon Legends',
+  'neon-tap': 'Neon Tap'
 };
 
 /* ── Player Identity ── */
@@ -113,7 +114,7 @@ function renderGameStats(containerId) {
   Object.entries(GAME_IDS).forEach(([id, name]) => {
     const plays = getPlays(id);
     html += `<div style="text-align:center;padding:10px 6px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(124,58,237,0.08)">
-      <div style="font-size:20px;margin-bottom:2px">${id === 'neon-legends' ? '⚡' : id === 'glitchfront' ? '🔫' : id === 'aethoria' ? '🌍' : id === 'helix-hex' ? '🌀' : id === 'aura-depths' ? '⛏️' : id === 'crown-chaser' ? '👑' : '🎲'}</div>
+      <div style="font-size:20px;margin-bottom:2px">${id === 'neon-legends' ? '⚡' : id === 'glitchfront' ? '🔫' : id === 'aethoria' ? '🌍' : id === 'helix-hex' ? '🌀' : id === 'aura-depths' ? '⛏️' : id === 'crown-chaser' ? '👑' : id === 'neon-tap' ? '💎' : '🎲'}</div>
       <div style="font-size:10px;color:var(--text3);font-weight:600">${name}</div>
       <div style="font-size:11px;color:var(--violet);font-weight:700">${plays.toLocaleString()} plays</div>
     </div>`;
@@ -126,7 +127,7 @@ function renderGameStats(containerId) {
 
 const ACHIEVEMENTS = [
   {id:'first_play',title:'First Steps',desc:'Play your first game',icon:'🎮',check:s=>Object.keys(s).length>=1,reward:0},
-  {id:'all_games',title:'Explorer',desc:'Play every game on the portal',icon:'🌍',check:s=>Object.keys(s).length>=7,reward:0},
+  {id:'all_games',title:'Explorer',desc:'Play every game on the portal',icon:'🌍',check:s=>Object.keys(s).length>=8,reward:0},
   {id:'score_1k',title:'Bronze Tier',desc:'Score 1,000 total points',icon:'🥉',check:s=>Object.values(s).reduce((a,b)=>a+(b.totalScore||0),0)>=1000,reward:0},
   {id:'score_10k',title:'Silver Tier',desc:'Score 10,000 total points',icon:'🥈',check:s=>Object.values(s).reduce((a,b)=>a+(b.totalScore||0),0)>=10000,reward:0},
   {id:'score_100k',title:'Gold Tier',desc:'Score 100,000 total points',icon:'🥇',check:s=>Object.values(s).reduce((a,b)=>a+(b.totalScore||0),0)>=100000,reward:0},
