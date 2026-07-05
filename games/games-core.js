@@ -192,3 +192,45 @@ function showAchievementToast(achievement) {
 const style = document.createElement('style');
 style.textContent = `@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes toastOut{from{opacity:1;transform:translateX(-50%) translateY(0)}to{opacity:0;transform:translateX(-50%) translateY(-20px)}}`;
 document.head.appendChild(style);
+
+/* ── Ratings System (Phase 6) ── */
+function rateGame(gameId, stars) {
+  if (stars < 1 || stars > 5) return;
+  const key = GAMES_PREFIX + 'ratings';
+  let ratings = {};
+  try { ratings = JSON.parse(localStorage.getItem(key) || '{}'); } catch(e) {}
+  ratings[gameId] = {stars, date: Date.now()};
+  localStorage.setItem(key, JSON.stringify(ratings));
+}
+
+function getGameRating(gameId) {
+  const key = GAMES_PREFIX + 'ratings';
+  try {
+    const ratings = JSON.parse(localStorage.getItem(key) || '{}');
+    return ratings[gameId]?.stars || 0;
+  } catch(e) { return 0; }
+}
+
+function renderStars(containerId, gameId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const current = getGameRating(gameId);
+  el.innerHTML = '<div style="font-size:11px;color:var(--text3);margin-bottom:4px">Rate this game</div>' +
+    '<div style="display:flex;gap:4px;font-size:24px;cursor:pointer">' +
+    [1,2,3,4,5].map(s => `<span onclick="rateGame('${gameId}',${s});this.parentElement.querySelectorAll('span').forEach((e,i)=>e.style.opacity=i<${s}?'1':'0.2')" style="opacity:${s<=current?1:0.2};transition:opacity .2s">★</span>`).join('') +
+    '</div>';
+}
+
+/* ── Embed API (Phase 8) ── */
+function getEmbedCode(gameId) {
+  const url = `https://games.byjtt.com/games/${gameId}`;
+  return `<iframe src="${url}" width="100%" height="600" frameborder="0" allow="fullscreen" style="border-radius:12px;max-width:960px;margin:0 auto;display:block"></iframe>`;
+}
+
+function renderEmbedCode(containerId, gameId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const code = getEmbedCode(gameId);
+  el.innerHTML = `<div style="font-size:11px;color:var(--text3);margin-bottom:4px">📦 Embed this game on your site</div>
+    <textarea readonly onclick="this.select()" style="width:100%;padding:8px;border-radius:8px;background:rgba(0,0,0,0.3);border:1px solid rgba(124,58,237,0.15);color:var(--text2);font-size:11px;font-family:monospace;resize:none;cursor:pointer" rows="3">${code}</textarea>`;
+}

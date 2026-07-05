@@ -75,7 +75,7 @@ footer a{color:#7c3aed;text-decoration:none}
     </div>
   </div>
   <div id="leaderboard" style="max-width:300px;margin:12px auto"></div>
-  <div class="more-games">
+  <div id="ratingsSection"></div><div id="embedSection"></div><div class="more-games">
     <h3>🎮 More Games</h3>
     <div class="game-cards">
       <a href="/games/glitchfront" class="game-card"><div class="title">Glitchfront 194x</div><div class="sub">FPS</div></a>
@@ -444,5 +444,5 @@ window.addEventListener('resize',()=>{
 updateHUD();
 })();
 </script>
-<script src="/games/games-core.js"></script><script>incrementPlays("crown-chaser");try{window.submitScoreFn=function(s){submitScore("crown-chaser",s);}}catch(e){}</script></body>
+<script src="/games/games-core.js"></script><script>if(typeof renderStars==="function"){renderStars("ratingsSection","crown-chaser");renderEmbedCode("embedSection","crown-chaser");}</script><script>incrementPlays("crown-chaser");try{window.submitScoreFn=function(s){submitScore("crown-chaser",s);}}catch(e){}</script></body>
 </html>

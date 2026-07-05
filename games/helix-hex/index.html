@@ -86,7 +86,7 @@ footer a{color:#7c3aed;text-decoration:none}
     </div>
   </div>
   <div id="leaderboard" style="max-width:300px;margin:12px auto"></div>
-  <div class="more-games">
+  <div id="ratingsSection"></div><div id="embedSection"></div><div class="more-games">
     <h3>🎮 More Games</h3>
     <div class="game-cards">
       <a href="/games/glitchfront" class="game-card"><div class="title">Glitchfront 194x</div><div class="sub">FPS</div></a>
@@ -499,5 +499,5 @@ updateUI();
 draw();
 })();
 </script>
-<script src="/games/games-core.js"></script><script>incrementPlays("helix-hex");try{window.submitScoreFn=function(s){submitScore("helix-hex",s);}}catch(e){}</script></body>
+<script src="/games/games-core.js"></script><script>if(typeof renderStars==="function"){renderStars("ratingsSection","helix-hex");renderEmbedCode("embedSection","helix-hex");}</script><script>incrementPlays("helix-hex");try{window.submitScoreFn=function(s){submitScore("helix-hex",s);}}catch(e){}</script></body>
 </html>

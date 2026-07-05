@@ -87,7 +87,7 @@ footer a{color:#7c3aed;text-decoration:none}
   <div style="text-align:center;margin:8px 0">
     <button class="play-btn" id="shareBtn" style="font-size:12px;padding:8px 20px">𝕏 Share Your Creation</button>
   </div>
-  <div class="more-games">
+  <div id="ratingsSection"></div><div id="embedSection"></div><div class="more-games">
     <h3>🎮 More Games</h3>
     <div class="game-cards">
       <a href="/games/glitchfront" class="game-card"><div class="title">Glitchfront 194x</div><div class="sub">FPS</div></a>
@@ -355,5 +355,5 @@ for(let i=0;i<30;i++){
 draw();
 })();
 </script>
-<script src="/games/games-core.js"></script><script>incrementPlays("vibegame");try{window.submitScoreFn=function(s){submitScore("vibegame",s);}}catch(e){}</script></body>
+<script src="/games/games-core.js"></script><script>if(typeof renderStars==="function"){renderStars("ratingsSection","vibegame");renderEmbedCode("embedSection","vibegame");}</script><script>incrementPlays("vibegame");try{window.submitScoreFn=function(s){submitScore("vibegame",s);}}catch(e){}</script></body>
 </html>

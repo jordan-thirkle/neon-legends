@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>My Profile — By JTT Game Studios</title>
+<meta name="description" content="Your player profile across all games at By JTT Game Studios. Track your scores, achievements, and play time.">
+<link rel="canonical" href="https://games.byjtt.com/player">
+<link rel="stylesheet" href="/css/studio.css">
+<style>
+.stat-card{text-align:center;padding:20px 12px;border-radius:12px;background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid rgba(124,58,237,0.1)}
+.stat-card .num{font-family:'Orbitron',monospace;font-size:28px;font-weight:900;background:linear-gradient(135deg,var(--violet),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.stat-card .label{font-size:11px;color:var(--text3);margin-top:4px}
+.game-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(124,58,237,0.06);margin-bottom:6px;transition:all .2s}
+.game-row:hover{background:rgba(124,58,237,0.06)}
+.game-row .g-icon{font-size:28px;width:40px;text-align:center}
+.game-row .g-info{flex:1}
+.game-row .g-info .g-title{font-size:14px;font-weight:600}
+.game-row .g-info .g-stats{font-size:11px;color:var(--text3);margin-top:2px}
+.game-row .g-best{text-align:right;font-size:14px;font-weight:700;color:var(--violet)}
+</style>
+</head>
+<body>
+<nav role="navigation"><a href="/" class="logo">⚡ <span>By JTT</span> <span class="badge">STUDIO</span></a>
+<ul class="nav-links"><li><a href="/games">Games</a></li><li><a href="/suggestions">Suggestions</a></li><li><a href="/changelog">Changelog</a></li></ul></nav>
+
+<main style="max-width:800px;margin:0 auto;padding:100px 16px 40px">
+<div id="profileContent">
+  <div style="text-align:center;padding:60px 20px;color:var(--text3)">Loading profile...</div>
+</div>
+</main>
+
+<footer style="margin-top:80px"><div class="bottom">© 2026 By JTT Game Studios</div></footer>
+
+<script src="/games/games-core.js"></script>
+<script>
+function renderProfile() {
+  const name = getPlayerName();
+  const stats = getPlayerStats();
+  const earned = getEarnedAchievements();
+  const totalPlays = Object.values(stats).reduce((a,b) => a + (b.plays||0), 0);
+  const totalScore = Object.values(stats).reduce((a,b) => a + (b.totalScore||0), 0);
+  const totalHighScores = Object.values(stats).reduce((a,b) => a + Math.max(0, b.highScore||0), 0);
+  const gameCount = Object.keys(stats).length;
+
+  let gameRows = Object.entries(GAME_IDS).map(([id, title]) => {
+    const s = stats[id];
+    return {id, title, plays: s?.plays||0, highScore: s?.highScore||0, totalScore: s?.totalScore||0};
+  }).filter(g => g.plays > 0).sort((a,b) => b.plays - a.plays);
+
+  const icons = {'neon-legends':'⚡','glitchfront':'🔫','aethoria':'🌍','helix-hex':'🌀','aura-depths':'⛏️','crown-chaser':'👑','vibegame':'🎲','neon-tap':'💎'};
+
+  document.getElementById('profileContent').innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:32px">
+      <div style="font-size:56px">👤</div>
+      <div><h1 style="font-size:28px;font-weight:900">${name}</h1>
+      <p style="color:var(--text2);font-size:14px">Player since first game played</p></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:32px">
+      <div class="stat-card"><div class="num">${totalPlays}</div><div class="label">Total Plays</div></div>
+      <div class="stat-card"><div class="num">${totalScore.toLocaleString()}</div><div class="label">Total Score</div></div>
+      <div class="stat-card"><div class="num">${gameCount}/8</div><div class="label">Games Played</div></div>
+      <div class="stat-card"><div class="num">${earned.length}/8</div><div class="label">Achievements</div></div>
+    </div>
+
+    <h2 style="font-size:18px;font-weight:800;margin-bottom:12px">📊 Game History</h2>
+    ${gameRows.length ? gameRows.map(g => `
+      <div class="game-row">
+        <div class="g-icon">${icons[g.id]||'🎮'}</div>
+        <div class="g-info"><div class="g-title">${g.title}</div><div class="g-stats">${g.plays} plays · ${g.totalScore.toLocaleString()} total score</div></div>
+        <div class="g-best">${g.highScore.toLocaleString()}</div>
+      </div>
+    `).join('') : '<p style="color:var(--text3);font-size:14px;text-align:center;padding:20px">No games played yet. <a href="/games" style="color:var(--violet)">Start playing →</a></p>'}
+
+    <h2 style="font-size:18px;font-weight:800;margin:24px 0 12px">🏅 Achievements</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">
+      ${ACHIEVEMENTS.map(a => {
+        const done = earned.includes(a.id);
+        return `<div style="text-align:center;padding:12px 6px;border-radius:10px;background:${done?'rgba(52,211,153,0.08)':'rgba(255,255,255,0.02)'};border:1px solid ${done?'rgba(52,211,153,0.2)':'rgba(255,255,255,0.05)'};opacity:${done?1:0.4}">
+          <div style="font-size:28px">${done?a.icon:'🔒'}</div>
+          <div style="font-size:10px;color:${done?'var(--green)':'var(--text3)'};margin-top:4px;font-weight:600">${a.title}</div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <h2 style="font-size:18px;font-weight:800;margin:24px 0 12px">🔗 Share</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-sm" onclick="window.open('https://x.com/intent/post?text=${encodeURIComponent('I have ' + earned.length + '/8 achievements and ' + totalScore.toLocaleString() + ' total points on By JTT Game Studios! 🎮')}&url=${encodeURIComponent('https://games.byjtt.com/games')}','_blank','width=600,height=400')">𝕏 Share Profile</button>
+      <button class="btn btn-sm btn-ghost" onclick="if(confirm('Reset all your game data? This cannot be undone.')){localStorage.removeItem('byjtt_games_player_stats');localStorage.removeItem('byjtt_games_achievements');localStorage.removeItem('byjtt_games_player_name');Object.keys(localStorage).filter(k=>k.startsWith('byjtt_games_scores_')).forEach(k=>localStorage.removeItem(k));location.reload();}">🔄 Reset My Data</button>
+    </div>
+  `;
+}
+renderProfile();
+</script>
+</body>
+</html>
