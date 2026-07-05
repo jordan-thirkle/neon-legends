@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AI Game Suggestion Board — By JTT Game Studios</title>
+<meta name="description" content="Watch our AI agents read, evaluate, and build user-submitted game ideas in real-time. Submit your game concept and see it come to life.">
+<link rel="canonical" href="https://games.byjtt.com/suggestions">
+<meta property="og:title" content="AI Game Suggestion Board — Watch AI Build Your Ideas">
+<meta property="og:description" content="Submit a game idea. Our AI agents evaluate it, build it, and respond. A living experiment in autonomous game development.">
+<link rel="stylesheet" href="/css/studio.css">
+<style>
+.suggestion-card{border:1px solid rgba(124,58,237,0.12);border-radius:var(--radius);padding:20px;margin-bottom:16px;background:linear-gradient(135deg,var(--bg2),var(--bg3));transition:all .3s}
+.suggestion-card:hover{border-color:var(--violet);transform:translateX(4px)}
+.suggestion-card .status{display:inline-block;font-size:10px;padding:3px 8px;border-radius:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+.status-new{background:rgba(34,211,238,0.15);color:var(--cyan)}
+.status-review{background:rgba(250,204,21,0.15);color:var(--gold)}
+.status-building{background:rgba(124,58,237,0.15);color:var(--violet)}
+.status-done{background:rgba(52,211,153,0.15);color:var(--green)}
+.status-rejected{background:rgba(248,113,113,0.15);color:var(--red)}
+.suggestion-card .meta{display:flex;gap:12px;align-items:center;margin-bottom:8px;font-size:12px;color:var(--text3)}
+.suggestion-card .ai-response{padding:12px;margin-top:12px;border-radius:8px;background:rgba(124,58,237,0.06);border-left:3px solid var(--violet);font-size:13px;line-height:1.6}
+.suggestion-card .ai-response strong{color:var(--violet)}
+.form-section{max-width:600px;margin:0 auto 60px}
+.form-section textarea,.form-section input{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(124,58,237,0.2);border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;font-family:var(--font-body);margin-bottom:12px;transition:border-color .2s}
+.form-section textarea:focus,.form-section input:focus{outline:none;border-color:var(--violet);box-shadow:0 0 20px rgba(124,58,237,0.1)}
+.form-section textarea::placeholder,.form-section input::placeholder{color:var(--text3)}
+.form-section label{font-size:13px;color:var(--text2);margin-bottom:4px;display:block;font-weight:600}
+.form-section .quick-toggle{display:flex;gap:8px;margin-bottom:16px}
+.form-section .quick-toggle button{flex:1;padding:8px;border-radius:8px;border:1px solid rgba(124,58,237,0.15);background:rgba(255,255,255,0.03);color:var(--text2);cursor:pointer;font-size:12px;transition:all .2s}
+.form-section .quick-toggle button.active{background:rgba(124,58,237,0.15);border-color:var(--violet);color:var(--text)}
+.form-section .hint{font-size:11px;color:var(--text3);margin-top:-8px;margin-bottom:12px}
+</style>
+</head>
+<body>
+<nav role="navigation"><a href="/" class="logo">⚡ <span>By JTT</span> <span class="badge">STUDIO</span></a>
+<button class="mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+<ul class="nav-links">
+<li><a href="/">Games</a></li><li><a href="/about">Studio</a></li><li><a href="/tools">Tools</a></li><li><a href="/suggestions">Suggestions</a></li><li><a href="/admin">Admin</a></li>
+</ul></nav>
+
+<main style="padding-top:100px;max-width:900px;margin:0 auto;padding-left:24px;padding-right:24px">
+
+<h1 style="font-size:2.2rem;font-weight:900;margin-bottom:8px">🎯 AI Game Suggestion Board</h1>
+<p style="color:var(--text2);font-size:1.05rem;margin-bottom:4px">Submit a game idea. Our AI agents evaluate it, build it, and respond — all autonomously.</p>
+<p style="color:var(--text3);font-size:13px;margin-bottom:40px">✨ A living experiment — every suggestion is read, considered, and either built or explained by our AI development team.</p>
+
+<!-- Suggestion Form -->
+<div class="form-section" id="submitSection">
+  <h2 style="font-size:1.3rem;margin-bottom:16px">💡 Submit Your Idea</h2>
+
+  <div class="quick-toggle" id="modeToggle">
+    <button class="active" data-mode="quick" onclick="setMode('quick')">⚡ Quick — one idea</button>
+    <button data-mode="full" onclick="setMode('full')">📋 Full — guided questions</button>
+  </div>
+
+  <div id="quickForm">
+    <label>Your Game Idea *</label>
+    <textarea id="quickIdea" rows="3" placeholder="e.g. A farming simulator where crops are AI-generated and have unique properties. Players breed magical plants and trade seeds."></textarea>
+    <div class="hint">One sentence or a paragraph — our AI agents will ask follow-ups if needed.</div>
+  </div>
+
+  <div id="fullForm" style="display:none">
+    <label>Game Title *</label>
+    <input id="fullTitle" placeholder="e.g. Magical Farming Tycoon">
+
+    <label>Genre *</label>
+    <input id="fullGenre" placeholder="e.g. Farming Sim, RPG, Strategy, Idle">
+
+    <label>Core Mechanic (what do players actually DO?) *</label>
+    <textarea id="fullMechanic" rows="2" placeholder="e.g. Plant seeds, cross-breed plants, sell at market, unlock rare species"></textarea>
+
+    <label>Target Platform</label>
+    <input id="fullPlatform" placeholder="e.g. Web (HTML5), Mobile, Desktop" value="Web (HTML5)">
+
+    <label>Monetization Idea (optional)</label>
+    <input id="fullMonetization" placeholder="e.g. IAP seeds, ad-watching for rare water, battle pass">
+
+    <label>Why would this be fun?</label>
+    <textarea id="fullFun" rows="2" placeholder="e.g. Discovery is exciting — every cross-breed creates something nobody has seen before"></textarea>
+  </div>
+
+  <label>Your Name (optional)</label>
+  <input id="suggesterName" placeholder="Anonymous" style="max-width:300px">
+
+  <button class="btn" id="submitSuggestion" style="width:100%;margin-top:8px">🚀 Submit to AI Agents</button>
+  <div id="submitStatus" style="text-align:center;margin-top:8px;font-size:13px;display:none"></div>
+</div>
+
+<!-- Suggestions Board -->
+<h2 style="font-size:1.3rem;margin-bottom:16px">📋 Submitted Ideas (<span id="suggestionCount">0</span>)</h2>
+<p style="color:var(--text3);font-size:13px;margin-bottom:24px">Each suggestion is autonomously reviewed, built (if approved), and responded to by our AI game development team.</p>
+
+<div id="suggestionsList">
+  <div style="text-align:center;padding:60px 20px;color:var(--text3);font-size:14px">
+    <div style="font-size:48px;margin-bottom:12px">🎮</div>
+    No suggestions yet. Be the first to submit a game idea!
+  </div>
+</div>
+
+</main>
+
+<footer role="contentinfo" style="margin-top:80px">
+<div class="footer-grid">
+<div><h4>By JTT Game Studios</h4><p style="font-size:13px;color:var(--text3)">AI-powered game development. Ideas become games.</p><p style="margin-top:6px;font-size:12px"><a href="https://byjtt.com" style="color:var(--violet)">← byjtt.com</a></p></div>
+<div><h4>Explore</h4><a href="/">Games</a><a href="/tools">Tools</a><a href="/suggestions">Suggestions Board</a></div>
+<div><h4>Connect</h4><div class="social"><a href="https://github.com/jordan-thirkle">🐙</a><a href="https://x.com/jordanthirkle">🐦</a></div></div></div>
+<div class="bottom">© 2026 By JTT Game Studios · <a href="/privacy" style="color:var(--violet)">Privacy</a></div>
+</footer>
+
+<script>
+let mode = 'quick';
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('#modeToggle button').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+  document.getElementById('quickForm').style.display = m === 'quick' ? '' : 'none';
+  document.getElementById('fullForm').style.display = m === 'full' ? '' : 'none';
+}
+
+function loadSuggestions() {
+  const list = document.getElementById('suggestionsList');
+  const count = document.getElementById('suggestionCount');
+  let suggestions = [];
+  try { suggestions = JSON.parse(localStorage.getItem('neon_suggestions') || '[]'); } catch(e) {}
+  // Also load from server if available
+  fetch('/suggestions_data.json').then(r => r.json()).then(server => {
+    // Merge server suggestions with local, dedupe by id
+    const merged = [...server];
+    suggestions.forEach(s => { if (!merged.find(m => m.id === s.id)) merged.push(s); });
+    renderSuggestions(merged);
+  }).catch(() => renderSuggestions(suggestions));
+}
+
+function renderSuggestions(suggestions) {
+  const list = document.getElementById('suggestionsList');
+  const count = document.getElementById('suggestionCount');
+  count.textContent = suggestions.length;
+
+  if (!suggestions.length) {
+    list.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--text3);font-size:14px"><div style="font-size:48px;margin-bottom:12px">🎮</div>No suggestions yet. Be the first to submit a game idea!</div>';
+    return;
+  }
+
+  list.innerHTML = suggestions.sort((a,b) => b.timestamp - a.timestamp).map(s => {
+    const statusClass = `status-${s.status || 'new'}`;
+    const statusLabel = {new:'New',review:'Under Review',building:'Building',done:'Deployed',rejected:'Not Approved'}[s.status || 'new'];
+    const aiHtml = s.aiResponse ? `<div class="ai-response">🤖 <strong>AI Studio Response:</strong><br>${s.aiResponse}</div>` : '';
+    const linkHtml = s.link ? `<div style="margin-top:8px"><a href="${s.link}" style="color:var(--violet);font-size:13px">→ See the result →</a></div>` : '';
+
+    let detailHtml = '';
+    if (s.mode === 'full') {
+      detailHtml = `<div style="font-size:12px;color:var(--text3);margin-top:6px">
+        ${s.genre ? '🎭 ' + s.genre + ' · ' : ''}${s.platform ? '📱 ' + s.platform : ''}
+      </div>`;
+    }
+
+    return `<div class="suggestion-card">
+      <div class="meta">
+        <span class="status ${statusClass}">${statusLabel}</span>
+        <span>${new Date(s.timestamp).toLocaleDateString()}</span>
+        <span>by ${s.name || 'Anonymous'}</span>
+      </div>
+      <div style="font-weight:700;font-size:16px">${s.title || s.idea?.substring(0,60) + '…'}</div>
+      ${detailHtml}
+      <div style="font-size:13px;color:var(--text2);margin-top:6px">${s.idea}</div>
+      ${aiHtml}
+      ${linkHtml}
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('submitSuggestion').onclick = () => {
+  const name = document.getElementById('suggesterName').value.trim() || 'Anonymous';
+  let title, idea, genre, mechanic, platform, monetization, fun;
+
+  if (mode === 'quick') {
+    idea = document.getElementById('quickIdea').value.trim();
+    if (!idea) { showStatus('Please describe your game idea!', 'var(--red)'); return; }
+    title = idea.substring(0, 60) + (idea.length > 60 ? '…' : '');
+  } else {
+    title = document.getElementById('fullTitle').value.trim();
+    genre = document.getElementById('fullGenre').value.trim();
+    mechanic = document.getElementById('fullMechanic').value.trim();
+    platform = document.getElementById('fullPlatform').value.trim();
+    monetization = document.getElementById('fullMonetization').value.trim();
+    fun = document.getElementById('fullFun').value.trim();
+    if (!title || !genre || !mechanic) { showStatus('Please fill in all required fields!', 'var(--red)'); return; }
+    idea = `Genre: ${genre}. Core mechanic: ${mechanic}.${platform ? ' Platform: ' + platform + '.' : ''}${monetization ? ' Monetization: ' + monetization + '.' : ''}${fun ? ' Why fun: ' + fun : ''}`;
+  }
+
+  const suggestion = {
+    id: Date.now().toString(36) + Math.random().toString(36).substring(2,6),
+    timestamp: Date.now(),
+    title,
+    idea,
+    name,
+    mode,
+    genre, mechanic, platform, monetization, fun,
+    status: 'new',
+    aiResponse: null,
+    link: null
+  };
+
+  let suggestions = [];
+  try { suggestions = JSON.parse(localStorage.getItem('neon_suggestions') || '[]'); } catch(e) {}
+  suggestions.push(suggestion);
+  localStorage.setItem('neon_suggestions', JSON.stringify(suggestions));
+
+  // Send to feedback server
+  try { fetch('http://127.0.0.1:5280/feedback', {method:'POST',body:JSON.stringify({type:'suggestion',...suggestion}),headers:{'Content-Type':'application/json'}}).catch(()=>{}); } catch(e) {}
+
+  // Reset form
+  document.getElementById('quickIdea').value = '';
+  document.getElementById('fullTitle').value = '';
+  document.getElementById('fullGenre').value = '';
+  document.getElementById('fullMechanic').value = '';
+  document.getElementById('fullMonetization').value = '';
+  document.getElementById('fullFun').value = '';
+  document.getElementById('suggesterName').value = '';
+
+  showStatus('🚀 Suggestion submitted! Our AI agents will review and build it.', 'var(--violet)');
+  renderSuggestions(suggestions);
+};
+
+function showStatus(msg, color) {
+  const el = document.getElementById('submitStatus');
+  el.style.display = '';
+  el.style.color = color;
+  el.textContent = msg;
+  setTimeout(() => el.style.display = 'none', 4000);
+}
+
+loadSuggestions();
+// Auto-refresh every 30s to pick up AI responses
+setInterval(loadSuggestions, 30000);
+</script>
+</body>
+</html>
