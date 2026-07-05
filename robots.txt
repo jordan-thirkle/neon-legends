@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Sitemap: https://games.byjtt.com/sitemap.xml
+
+# Allow all crawlers full access
+# Clean URLs with no query params
