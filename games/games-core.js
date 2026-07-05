@@ -134,6 +134,9 @@ const ACHIEVEMENTS = [
   {id:'plays_10',title:'Dedicated',desc:'Play 10 games total',icon:'🔟',check:s=>Object.values(s).reduce((a,b)=>a+(b.plays||0),0)>=10,reward:0},
   {id:'plays_100',title:'Addicted',desc:'Play 100 games total',icon:'💯',check:s=>Object.values(s).reduce((a,b)=>a+(b.plays||0),0)>=100,reward:0},
   {id:'high_score_any',title:'Top Score',desc:'Get a high score in any game',icon:'🏆',check:s=>Object.values(s).some(b=>(b.highScore||0)>=100),reward:0},
+  {id:'score_50k',title:'Platinum Tier',desc:'Score 50,000 total points',icon:'💎',check:s=>Object.values(s).reduce((a,b)=>a+(b.totalScore||0),0)>=50000,reward:0},
+  {id:'plays_50',title:'Game Enthusiast',desc:'Play 50 games total',icon:'🎯',check:s=>Object.values(s).reduce((a,b)=>a+(b.plays||0),0)>=50,reward:0},
+  {id:'all_high_scores',title:'All Star',desc:'Get a high score in 4 different games',icon:'⭐',check:s=>Object.values(s).filter(b=>(b.highScore||0)>=10).length>=4,reward:0},
 ];
 
 function checkAchievements() {
