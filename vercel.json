@@ -1,0 +1,37 @@
+{
+  "version": 2,
+  "name": "games-byjtt",
+  "buildCommand": null,
+  "outputDirectory": ".",
+  "rewrites": [
+    { "source": "/neon-legends", "destination": "/game/index.html" },
+    { "source": "/neon-legends/:path*", "destination": "/game/:path*" },
+    { "source": "/studio", "destination": "/studio/about.html" },
+    { "source": "/studio/:path*", "destination": "/studio/:path*" },
+    { "source": "/blog", "destination": "/studio/blog.html" },
+    { "source": "/blog/:path*", "destination": "/studio/blog/:path*" },
+    { "source": "/press", "destination": "/studio/press.html" },
+    { "source": "/admin", "destination": "/studio/admin.html" },
+    { "source": "/privacy", "destination": "/studio/privacy.html" },
+    { "source": "/", "destination": "/studio/index.html" }
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    },
+    {
+      "source": "/game/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    }
+  ]
+}

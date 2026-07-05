@@ -206,3 +206,36 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:#fff;font-famil
 .codex-card.unlocked{border-color:var(--violet);background:rgba(124,58,237,0.08)}
 .codex-card.locked{filter:grayscale(1);opacity:0.4}
 .codex-card .codex-label{font-size:9px;margin-top:4px;color:rgba(255,255,255,0.6)}
+
+/* ── Skills Grid ─────────────────────────── */
+.skill-grid{display:flex;flex-direction:column;gap:10px;padding:0 12px 120px}
+.skill-card{border:1px solid rgba(124,58,237,0.25)}
+.skill-card .hp-fill{background:linear-gradient(90deg,var(--gold),var(--magenta)) !important}
+
+/* ── World Map Zones ─────────────────────── */
+.world-zones{display:flex;flex-direction:column;gap:10px;padding:0 12px 80px}
+.zone-card{border:1px solid rgba(124,58,237,0.25)}
+.zone-locked{filter:grayscale(0.6)}
+
+/* ── Floating Level Up Text ──────────────── */
+.float-level{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:24px;font-weight:900;font-family:'Orbitron',sans-serif;
+  color:var(--gold);text-shadow:0 0 20px rgba(250,204,21,0.8),0 0 40px rgba(250,204,21,0.4);
+  pointer-events:none;z-index:50;animation:floatLevelUp 1.5s forwards}
+@keyframes floatLevelUp{0%{opacity:1;transform:translate(-50%,-50%) scale(0.5)}
+  30%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}
+  100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
+
+/* ── Screen Shake ────────────────────────── */
+.screen-shake{animation:screenShake .4s}
+@keyframes screenShake{0%,100%{transform:translateX(0)}
+  10%{transform:translateX(-4px)}20%{transform:translateX(4px)}
+  30%{transform:translateX(-4px)}40%{transform:translateX(4px)}
+  50%{transform:translateX(-2px)}60%{transform:translateX(2px)}
+  70%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
+
+/* ── Pulse combo animation ──────────────── */
+@keyframes pulseCombo{0%{transform:scale(1);opacity:1}
+  50%{transform:scale(1.15);opacity:0.8}
+  100%{transform:scale(1);opacity:1}}
+.combo-pulse{animation:pulseCombo .6s ease-in-out infinite}

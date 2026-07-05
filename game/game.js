@@ -95,6 +95,23 @@
   function towerFloorPower(floor) { return Math.floor(500 * Math.pow(1.15, floor - 1)); }
   const TOWER_REWARDS = {10:{gems:50,gold:1000},20:{gems:100,gold:2500},30:{gems:150,gold:5000},40:{gems:200,gold:10000},50:{gems:300,gold:20000,gear:true},60:{gems:400,gold:30000},70:{gems:500,gold:50000},80:{gems:600,gold:75000},90:{gems:800,gold:100000},100:{gems:1000,gold:200000,gear:true}};
 
+  /* ── SKILLS ──────────────────────────────────── */
+  const SKILLS = [
+    {id:'mining',name:'Mining',icon:'⛏️',desc:'Mine ores for gold',bonus:'+2% gold/level'},
+    {id:'woodcutting',name:'Woodcutting',icon:'🪓',desc:'Chop logs for energy regen',bonus:'+2% energy regen/level'},
+    {id:'fishing',name:'Fishing',icon:'🎣',desc:'Catch fish to sell',bonus:'+1% max energy/level'},
+    {id:'crafting',name:'Crafting',icon:'🔨',desc:'Craft gear from materials',bonus:'+2% squad power/level'},
+    {id:'combat',name:'Combat',icon:'⚔️',desc:'Fight to improve crits',bonus:'+1% crit chance/level'},
+    {id:'cooking',name:'Cooking',icon:'🍳',desc:'Cook fish for energy',bonus:'+1% passive gold/level'},
+  ];
+  const WORLD_ZONES = [
+    {id:'crystal_fields',name:'Crystal Fields',icon:'💎',desc:'Lush neon crystal plains',minStage:0,mult:1},
+    {id:'ember_wastes',name:'Ember Wastes',icon:'🌋',desc:'Scorched volcanic badlands',minStage:5,mult:1.5},
+    {id:'void_depths',name:'Void Depths',icon:'🌀',desc:'Dark abyss of void energy',minStage:15,mult:2.5},
+    {id:'chrono_spire',name:'Chrono Spire',icon:'⏳',desc:'Time-twisted ancient spire',minStage:30,mult:4},
+    {id:'neon_nexus',name:'Neon Nexus',icon:'👾',desc:'Heart of the neon dimension',minStage:50,mult:6},
+  ];
+
   /* ── SAVE ───────────────────────────────────── */
   let save = load();
   const limitedBanner = LIMITED_BANNER;
@@ -119,6 +136,15 @@
       guildName:'',guildLevel:1,guildXp:0,raidBossHp:null,raidBossMaxHp:null,
       quests:[],questDate:'',questProgress:{},
       rateUpFeatured:null,rateUpDate:'',
+      skills:{
+        mining:{xp:0,level:1},
+        woodcutting:{xp:0,level:1},
+        fishing:{xp:0,level:1},
+        crafting:{xp:0,level:1},
+        combat:{xp:0,level:1},
+        cooking:{xp:0,level:1},
+      },
+      unlockedZones:['crystal_fields'],
       musicPlaying:false,
     };
   }
@@ -175,18 +201,31 @@
     const factionBonus = getFactionBonus(sq);
     const guildBonus = 1 + ((save.guildLevel||1) - 1) * 0.02;
     const chapterBonus = (currentBoss()?.chapter || 1) >= 4 ? 1.25 : 1;
-    return Math.max(1, Math.floor(p * factionBonus * guildBonus * chapterBonus));
+    const craftingLevel = save.skills?.crafting?.level || 1;
+    const craftingBonus = 1 + (craftingLevel - 1) * 0.02;
+    return Math.max(1, Math.floor(p * factionBonus * guildBonus * chapterBonus * craftingBonus));
+  }
+
+  function getMaxEnergy() {
+    const fishingLevel = save.skills?.fishing?.level || 1;
+    return Math.floor(100 + (fishingLevel - 1) * 1);
   }
 
   function remainingEnergy() {
     const now = Date.now();
     const d = now - save.energyTs;
-    if (d > 999) { save.energy = Math.min(save.maxEnergy, save.energy + Math.floor(d/1000)); save.energyTs = now; persist(); }
+    if (d > 999) {
+      const wcLevel = save.skills?.woodcutting?.level || 1;
+      const regenRate = 1 + (wcLevel - 1) * 0.02;
+      if (!save._maxEnergy) save._maxEnergy = getMaxEnergy();
+      save.energy = Math.min(save._maxEnergy, save.energy + Math.floor(d/1000 * regenRate));
+      save.energyTs = now; persist();
+    }
     return save.energy;
   }
 
-  function energyRefillAt() { return Math.max(0, (save.maxEnergy - save.energy) * 1000 - (Date.now() - save.energyTs)); }
-  function energyPct() { return Math.floor((save.energy / save.maxEnergy) * 100); }
+  function energyRefillAt() { return Math.max(0, (getMaxEnergy() - save.energy) * 1000 - (Date.now() - save.energyTs)); }
+  function energyPct() { const me = getMaxEnergy(); return Math.floor((save.energy / me) * 100); }
 
   /* ── HERO ROLL / GACHA ──────────────────────── */
   function rollHero(isRateUp) {
@@ -603,7 +642,9 @@
     incCombo();
     let boss = currentBoss();
     if (!save.bossHp) { save.bossMaxHp = boss.hp; save.bossHp = boss.hp; }
-    const isCrit = Math.random() < 0.15;
+    const combatLevel = save.skills?.combat?.level || 1;
+    const critChance = 0.15 + (combatLevel - 1) * 0.01;
+    const isCrit = Math.random() < critChance;
     let dmg = Math.floor(squadPower() * comboBonus() * (1 + Math.random() * 0.3));
     if (isCrit) { dmg = Math.floor(dmg * 2); notify('💥 CRIT! x2'); vibrate(30); playSfx('ult'); }
 
@@ -647,6 +688,9 @@
     playSfx('ult');
     playSfx('victory');
     if (save.bossHp <= 0) { defeatBoss(); }
+    /* Screen shake on ultimate */
+    document.body.classList.add('screen-shake');
+    setTimeout(() => document.body.classList.remove('screen-shake'), 400);
     persist(); renderHud(); renderCampaign(); checkAchievements();
     notify('💥 ULTIMATE! -' + dmg + ' damage!');
     animateNum('gold', save.gold, 300);
@@ -654,7 +698,9 @@
 
   function defeatBoss() {
     const boss = currentBoss();
-    save.gold += boss.gold;
+    const miningLevel = save.skills?.mining?.level || 1;
+    const miningMult = 1 + (miningLevel - 1) * 0.02;
+    save.gold += Math.floor(boss.gold * miningMult);
     save.passXp += 10;
     save.stage++;
     save.lifetimeBosses = (save.lifetimeBosses||0) + 1;
@@ -672,6 +718,18 @@
     const g = {id:'gear_'+Date.now(),name:gn,type:gt,rarity:gr,atk:gStats[gr].atk,hp:gStats[gr].hp,enhance:0};
     if (!save.gearInventory) save.gearInventory = [];
     save.gearInventory.push(g);
+
+    /* Combat skill XP from boss defeats */
+    if (!save.skills) save.skills = {mining:{xp:0,level:1},woodcutting:{xp:0,level:1},fishing:{xp:0,level:1},crafting:{xp:0,level:1},combat:{xp:0,level:1},cooking:{xp:0,level:1}};
+    const sk = save.skills.combat;
+    const xpGain = 10 + Math.floor(sk.level * 0.5);
+    sk.xp = (sk.xp||0) + xpGain;
+    const needed = sk.level * 100;
+    if (sk.xp >= needed) {
+      sk.xp -= needed;
+      sk.level++;
+      floatSkillLevelUp('combat', sk.level);
+    }
 
     /* Guild XP from boss defeats */
     if (save.guildName) {
@@ -984,6 +1042,8 @@
     if (id === 'guild') renderGuild();
     if (id === 'codex') renderCodex();
     if (id === 'quests') renderQuests();
+    if (id === 'skills') renderSkills();
+    if (id === 'world') renderWorld();
   }
 
   function renderHud() {
@@ -1231,6 +1291,8 @@
     const start = parseInt(el.textContent) || 0;
     const diff = target - start;
     if (Math.abs(diff) < 5 || diff < 0) { el.textContent = target; return; }
+    el.classList.add('num-pop');
+    setTimeout(() => el.classList.remove('num-pop'), 300);
     const step = Math.ceil(diff / (duration / 30));
     let current = start;
     const timer = setInterval(() => {
@@ -1275,9 +1337,12 @@
       el.textContent = '🔥 ' + c + 'x combo';
       el.style.opacity = '1';
       el.classList.add('combo-active');
+      el.classList.add('combo-pulse');
       setTimeout(() => el.classList.remove('combo-active'), 300);
+      setTimeout(() => el.classList.remove('combo-pulse'), 600);
     } else {
       el.style.opacity = '0';
+      el.classList.remove('combo-pulse');
     }
   }
 
@@ -1348,6 +1413,126 @@
     }, 400);
   }
 
+  /* ── SKILLS SYSTEM ────────────────────────── */
+  function skillXpForLevel(level) { return level * 100; }
+
+  function doSkillAction(skillId) {
+    if (remainingEnergy() < 1) return notify('No energy ⏳');
+    save.energy -= 1;
+    save.energyTs = Date.now();
+    if (!save.skills) save.skills = {mining:{xp:0,level:1},woodcutting:{xp:0,level:1},fishing:{xp:0,level:1},crafting:{xp:0,level:1},combat:{xp:0,level:1},cooking:{xp:0,level:1}};
+    const skill = save.skills[skillId];
+    if (!skill) return notify('Unknown skill');
+    const xpGain = 10 + Math.floor(skill.level * 0.5);
+    const goldGain = Math.floor(1 + skill.level * 0.5);
+    skill.xp = (skill.xp||0) + xpGain;
+    const needed = skillXpForLevel(skill.level);
+    while (skill.xp >= needed) {
+      skill.xp -= needed;
+      skill.level++;
+      /* Update dynamic max energy when fishing levels up */
+      if (skillId === 'fishing') save._maxEnergy = getMaxEnergy();
+      floatSkillLevelUp(skillId, skill.level);
+    }
+    save.gold += goldGain;
+    /* Woodcutting: also gives a small energy refund chance */
+    if (skillId === 'woodcutting' && Math.random() < 0.05) {
+      save.energy = Math.min(save._maxEnergy || getMaxEnergy(), save.energy + 1);
+    }
+    /* Cooking: gives energy restore */
+    if (skillId === 'cooking') {
+      const restore = 1 + Math.floor(skill.level * 0.3);
+      save.energy = Math.min(save._maxEnergy || getMaxEnergy(), save.energy + restore);
+    }
+    const skInfo = SKILLS.find(s => s.id === skillId);
+    persist(); renderHud(); renderSkills();
+    if (skInfo) notify(skInfo.icon + ' ' + skInfo.name + ' +' + xpGain + 'XP, +' + goldGain + '⚡');
+  }
+
+  function floatSkillLevelUp(skillId, level) {
+    const skInfo = SKILLS.find(s => s.id === skillId);
+    if (!skInfo) return;
+    const el = document.createElement('div');
+    el.className = 'float-level';
+    el.textContent = skInfo.icon + ' ' + skInfo.name + ' level up! → ' + level;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1500);
+    playSfx('rare');
+    vibrate(20);
+  }
+
+  function renderSkills() {
+    const panel = $('#skills');
+    if (!panel) return;
+    if (!save.skills) save.skills = {mining:{xp:0,level:1},woodcutting:{xp:0,level:1},fishing:{xp:0,level:1},crafting:{xp:0,level:1},combat:{xp:0,level:1},cooking:{xp:0,level:1}};
+    let html = '<div class="section-title">⛏️ Player Skills</div><div class="skill-grid">';
+    SKILLS.forEach(s => {
+      const sk = save.skills[s.id] || {xp:0,level:1};
+      const needed = skillXpForLevel(sk.level);
+      const pct = Math.min(100, Math.floor(((sk.xp||0) / needed) * 100));
+      const actionLabel = s.id === 'combat' ? '⚔️ Boss' : s.icon + ' ' + s.name;
+      const isCombat = s.id === 'combat';
+      const isCrafting = s.id === 'crafting';
+      const descText = isCombat ? 'Defeat bosses to train' : (isCrafting ? 'Use ores & logs to craft' : ('Click to train - costs 1 energy'));
+      html += '<div class="card skill-card">'
+        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+        + '<span style="font-size:24px">' + s.icon + '</span>'
+        + '<div style="flex:1"><div style="font-weight:700;font-size:14px">' + s.name + '</div>'
+        + '<div style="font-size:10px;color:rgba(255,255,255,0.5)">' + descText + '</div></div>'
+        + '<div style="text-align:right"><div style="font-weight:700;font-size:16px;color:var(--gold)">Lv.' + sk.level + '</div>'
+        + '<div style="font-size:9px;color:rgba(255,255,255,0.4)">' + s.bonus + '</div></div></div>'
+        + '<div class="hp-bar" style="height:8px;margin-bottom:6px"><div class="hp-fill" style="width:' + pct + '%;background:var(--gold)"></div></div>'
+        + '<div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:6px">'
+        + '<span>XP: ' + (sk.xp||0) + '/' + needed + '</span><span>' + pct + '%</span></div>'
+        + (isCombat
+          ? '<div style="font-size:11px;color:var(--green);text-align:center">⚔️ Trained automatically by defeating bosses!</div>'
+          : '<button class="btn btn-sm" style="width:100%" onclick="game.doSkill(\'' + s.id + '\')">' + (s.id==='cooking'?'🍳 Cook':s.id==='crafting'?'🔨 Craft':actionLabel) + '</button>')
+        + '</div>';
+    });
+    html += '</div>';
+    panel.innerHTML = html;
+  }
+
+  /* ── WORLD MAP ──────────────────────────────── */
+  function renderWorld() {
+    const panel = $('#world');
+    if (!panel) return;
+    let html = '<div class="section-title">🌍 World Map</div><div class="world-zones">';
+    WORLD_ZONES.forEach(z => {
+      const unlocked = save.unlockedZones?.includes(z.id) || (save.stage >= z.minStage);
+      const locked = !unlocked;
+      /* Auto-unlock if stage milestone reached */
+      if (save.stage >= z.minStage && !save.unlockedZones?.includes(z.id)) {
+        if (!save.unlockedZones) save.unlockedZones = ['crystal_fields'];
+        save.unlockedZones.push(z.id);
+        persist();
+      }
+      const zoneStage = Math.max(1, Math.floor((save.stage + 1) * z.mult));
+      html += '<div class="card zone-card' + (locked ? ' zone-locked' : '') + '" style="opacity:' + (locked ? 0.4 : 1) + '">'
+        + '<div style="display:flex;align-items:center;gap:10px">'
+        + '<span style="font-size:32px">' + (locked ? '🔒' : z.icon) + '</span>'
+        + '<div style="flex:1"><div style="font-weight:700;font-size:14px">' + z.name + '</div>'
+        + '<div style="font-size:10px;color:rgba(255,255,255,0.5)">' + z.desc + '</div></div>'
+        + '<div style="text-align:right"><div style="font-size:11px;color:' + (locked ? 'var(--red)' : 'var(--green)') + '">'
+        + (locked ? '🔒 Stage ' + z.minStage + '+' : '✅ Active') + '</div>'
+        + '<div style="font-size:10px;color:rgba(255,255,255,0.4)">' + z.mult + 'x rewards</div></div></div>'
+        + '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:6px">Recommended: Stage ' + z.minStage + '+ · Zone power: ' + formatBig(zoneStage) + '</div>'
+        + '</div>';
+    });
+    html += '</div>';
+    /* Show zone effects on current gameplay */
+    html += '<div class="section-title" style="margin-top:12px">⚡ Zone Benefits</div>';
+    html += '<div class="card" style="margin:0 12px 80px;font-size:11px;color:rgba(255,255,255,0.7)">';
+    if (save.unlockedZones && save.unlockedZones.length > 0) {
+      const bestZone = WORLD_ZONES.filter(z => save.unlockedZones?.includes(z.id)).pop() || WORLD_ZONES[0];
+      html += '<div>Active Zone: ' + bestZone.icon + ' ' + bestZone.name + ' (' + bestZone.mult + 'x gold/XP)</div>';
+    } else {
+      html += '<div>Complete stage 0 to unlock Crystal Fields</div>';
+    }
+    html += '</div>';
+    panel.innerHTML = html;
+  }
+
   /* ── WINDOW API ─────────────────────────────── */
   window.game = {
     attack, switchTab,
@@ -1416,6 +1601,10 @@
     claimQuest(id) { claimQuest(id); },
     rateUpPull(premium) { doPull(premium, true); },
     toggleMusic() { toggleMusic(); },
+    /* Skills & World */
+    doSkill(skillId) { doSkillAction(skillId); },
+    renderSkills() { renderSkills(); },
+    renderWorld() { renderWorld(); },
     /* Rate-up featured hero accessor */
     getRateUpFeatured() { return save.rateUpFeatured; },
     init() {
@@ -1452,7 +1641,9 @@
     const now = Date.now();
     const sec = Math.min(43200, Math.floor((now - (save.offlineTs || now)) / 1000));
     if (sec > 0) {
-      const gold = Math.floor(sec * squadPower() * 0.5);
+      const cookingLevel = save.skills?.cooking?.level || 1;
+      const cookingMult = 1 + (cookingLevel - 1) * 0.01;
+      const gold = Math.floor(sec * squadPower() * 0.5 * cookingMult);
       save.gold += gold; save.offlineTs = now; persist();
       trackQuestProgress('offline', 1);
       return {seconds:sec, gold:gold};
@@ -1470,7 +1661,7 @@
     document.head.appendChild(style);
 
     /* Ensure all tab panels exist (skip if already in HTML) */
-    const neededPanels = ['tower','guild','codex','quests'];
+    const neededPanels = ['tower','guild','codex','quests','skills','world'];
     neededPanels.forEach(id => {
       if (!$('#' + id)) {
         const panel = document.createElement('div');
@@ -1493,6 +1684,8 @@
       {id:'tower',icon:'🏯',label:'Tower'},
       {id:'codex',icon:'📖',label:'Codex'},
       {id:'quests',icon:'📋',label:'Quests'},
+      {id:'skills',icon:'⛏️',label:'Skills'},
+      {id:'world',icon:'🌍',label:'World'},
     ];
     neededTabs.forEach(({id, icon, label}) => {
       if (!$('#mainTabs .tab[data-tab="' + id + '"]')) {
@@ -1591,7 +1784,17 @@
     if (save.attackCount === 0) { const h = $('#helpToast'); if (h) { h.style.display = ''; setTimeout(() => h.style.display = 'none', 6000); } }
 
     /* Auto energy regen tick */
-    setInterval(() => { remainingEnergy(); renderHud(); if (save.energy >= save.maxEnergy && Date.now() - (save._lastFullNotif||0) > 300000) { save._lastFullNotif = Date.now(); notify('⚡ Energy full! Come back to fight!'); vibrate(20); } }, 1000);
+    setInterval(() => { 
+      const me = getMaxEnergy();
+      if (!save._maxEnergy) save._maxEnergy = me;
+      remainingEnergy(); 
+      renderHud(); 
+      if (save.energy >= me && Date.now() - (save._lastFullNotif||0) > 300000) { 
+        save._lastFullNotif = Date.now(); 
+        notify('⚡ Energy full! Come back to fight!'); 
+        vibrate(20); 
+      } 
+    }, 1000);
     /* Auto UI refresh */
     setInterval(() => { game.renderPass(); game.renderSummon(); game.renderEvents(); renderCampaign(); renderTower(); renderGuild(); renderCodex(); renderQuests(); }, 1000);
     notify('⚡ Neon Legends loaded!');
