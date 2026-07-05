@@ -1378,6 +1378,18 @@
       $('#statsOverlay').classList.add('show');
     },
     closeStats() { $('#statsOverlay').classList.remove('show'); },
+    sendFeedback() {
+      const text = $('#feedbackInput')?.value?.trim();
+      if (!text) return notify('Write something first!');
+      const feedback = JSON.parse(localStorage.getItem('neon_feedback') || '[]');
+      const entry = {text, time: Date.now(), version: '1.1.0', player: save.heroes.length + ' heroes, stage ' + save.stage};
+      feedback.push(entry);
+      localStorage.setItem('neon_feedback', JSON.stringify(feedback));
+      /* Also try sending to local feedback server */
+      try { fetch('http://127.0.0.1:5280/feedback', {method:'POST',body:JSON.stringify(entry),headers:{'Content-Type':'application/json'}}).catch(()=>{}); } catch(e) {}
+      $('#feedbackInput').value = '';
+      notify('🙏 Feedback received! Our AI team will review it.');
+    },
     /* Auto-battle */
     autoEnabled: false,
     autoInterval: null,
@@ -1553,6 +1565,7 @@
     $('#watchAd').onclick = () => game.watchAd();
     $('#passClaim').onclick = () => game.claimPass();
     $('#autoBtn').onclick = () => game.toggleAuto();
+    $('#feedbackBtn').onclick = () => game.sendFeedback();
     const se = $('#exportSave');
     if (se) se.onclick = () => {
       const blob = new Blob([JSON.stringify(save)], {type:'application/json'});
