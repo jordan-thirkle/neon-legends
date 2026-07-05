@@ -49,10 +49,12 @@ function submitScore(gameId, score, playerName) {
   localStorage.setItem(key, JSON.stringify(scores));
   updatePlayerStats(gameId, score);
   /* Check for new achievements after score */
-  if (checkAchievements()) {
-    const earned = getEarnedAchievements();
-    /* Simple notification — in a full version, show a toast */
-    console.log('🏅 Achievement unlocked!');
+  const justEarned = checkAchievements();
+  if (justEarned && justEarned.length > 0) {
+    justEarned.forEach(aid => {
+      const a = ACHIEVEMENTS.find(x => x.id === aid);
+      if (a) showAchievementToast(a);
+    });
   }
 }
 
@@ -136,17 +138,19 @@ const ACHIEVEMENTS = [
 function checkAchievements() {
   const stats = getPlayerStats();
   const earned = getEarnedAchievements();
+  const newOnes = [];
   let changed = false;
   ACHIEVEMENTS.forEach(a => {
     if (!earned.includes(a.id) && a.check(stats)) {
       earned.push(a.id);
+      newOnes.push(a.id);
       changed = true;
     }
   });
   if (changed) {
     try { localStorage.setItem(GAMES_PREFIX + 'achievements', JSON.stringify(earned)); } catch(e) {}
   }
-  return changed;
+  return newOnes; // return array of newly earned IDs
 }
 
 function getEarnedAchievements() {
@@ -173,3 +177,17 @@ function renderAchievements(containerId) {
       </div>`;
     }).join('')}</div>`;
 }
+
+/* ── Achievement Toast ── */
+function showAchievementToast(achievement) {
+  const el = document.createElement('div');
+  el.style.cssText = `position:fixed;top:80px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,rgba(52,211,153,0.15),rgba(124,58,237,0.1));border:1px solid rgba(52,211,153,0.3);border-radius:12px;padding:12px 20px;z-index:1000;display:flex;align-items:center;gap:10px;font-size:14px;color:#fff;box-shadow:0 10px 40px rgba(0,0,0,0.5);animation:toastIn .3s ease,toastOut .3s ease 3.7s forwards`;
+  el.innerHTML = `<span style="font-size:24px">${achievement.icon}</span><div><div style="font-weight:700">Achievement Unlocked!</div><div style="font-size:12px;color:var(--green)">${achievement.title} — ${achievement.desc}</div></div>`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+/* Inject toast animation */
+const style = document.createElement('style');
+style.textContent = `@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes toastOut{from{opacity:1;transform:translateX(-50%) translateY(0)}to{opacity:0;transform:translateX(-50%) translateY(-20px)}}`;
+document.head.appendChild(style);
