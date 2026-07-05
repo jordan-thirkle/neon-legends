@@ -97,6 +97,9 @@
 <!-- Play Count Stats -->
 <div id="gameStats"></div>
 
+<!-- Achievements -->
+<div id="achievementsSection"></div>
+
 <!-- Featured Carousel -->
 <div class="featured-row">
   <div class="featured-main" id="featuredMain" onclick="">
@@ -175,6 +178,8 @@ function filterGames(query) {
 
 // Play stats
 if (typeof renderGameStats === 'function') renderGameStats('gameStats');
+// Achievements
+if (typeof renderAchievements === 'function') renderAchievements('achievementsSection');
 
 // Featured carousel
 const featuredGames = ALL_GAMES.filter(g => g.id !== 'vibegame');

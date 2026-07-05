@@ -48,6 +48,12 @@ function submitScore(gameId, score, playerName) {
   scores = scores.slice(0, 50);
   localStorage.setItem(key, JSON.stringify(scores));
   updatePlayerStats(gameId, score);
+  /* Check for new achievements after score */
+  if (checkAchievements()) {
+    const earned = getEarnedAchievements();
+    /* Simple notification — in a full version, show a toast */
+    console.log('🏅 Achievement unlocked!');
+  }
 }
 
 function getLeaderboard(gameId, limit) {
@@ -112,4 +118,58 @@ function renderGameStats(containerId) {
   });
   html += '</div>';
   el.innerHTML = html;
+}
+
+/* ── Achievement System (Phase 5) ── */
+
+const ACHIEVEMENTS = [
+  {id:'first_play',title:'First Steps',desc:'Play your first game',icon:'🎮',check:s=>Object.keys(s).length>=1,reward:0},
+  {id:'all_games',title:'Explorer',desc:'Play every game on the portal',icon:'🌍',check:s=>Object.keys(s).length>=7,reward:0},
+  {id:'score_1k',title:'Bronze Tier',desc:'Score 1,000 total points',icon:'🥉',check:s=>Object.values(s).reduce((a,b)=>a+(b.totalScore||0),0)>=1000,reward:0},
+  {id:'score_10k',title:'Silver Tier',desc:'Score 10,000 total points',icon:'🥈',check:s=>Object.values(s).reduce((a,b)=>a+(b.totalScore||0),0)>=10000,reward:0},
+  {id:'score_100k',title:'Gold Tier',desc:'Score 100,000 total points',icon:'🥇',check:s=>Object.values(s).reduce((a,b)=>a+(b.totalScore||0),0)>=100000,reward:0},
+  {id:'plays_10',title:'Dedicated',desc:'Play 10 games total',icon:'🔟',check:s=>Object.values(s).reduce((a,b)=>a+(b.plays||0),0)>=10,reward:0},
+  {id:'plays_100',title:'Addicted',desc:'Play 100 games total',icon:'💯',check:s=>Object.values(s).reduce((a,b)=>a+(b.plays||0),0)>=100,reward:0},
+  {id:'high_score_any',title:'Top Score',desc:'Get a high score in any game',icon:'🏆',check:s=>Object.values(s).some(b=>(b.highScore||0)>=100),reward:0},
+];
+
+function checkAchievements() {
+  const stats = getPlayerStats();
+  const earned = getEarnedAchievements();
+  let changed = false;
+  ACHIEVEMENTS.forEach(a => {
+    if (!earned.includes(a.id) && a.check(stats)) {
+      earned.push(a.id);
+      changed = true;
+    }
+  });
+  if (changed) {
+    try { localStorage.setItem(GAMES_PREFIX + 'achievements', JSON.stringify(earned)); } catch(e) {}
+  }
+  return changed;
+}
+
+function getEarnedAchievements() {
+  try { return JSON.parse(localStorage.getItem(GAMES_PREFIX + 'achievements') || '[]'); } catch(e) { return []; }
+}
+
+function getAchievementCount() {
+  return getEarnedAchievements().length;
+}
+
+function renderAchievements(containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const earned = getEarnedAchievements();
+  const total = ACHIEVEMENTS.length;
+  el.innerHTML = `
+    <div style="font-size:11px;color:var(--text3);margin-bottom:8px;font-weight:600">🏅 ACHIEVEMENTS ${earned.length}/${total}</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px">
+    ${ACHIEVEMENTS.map(a => {
+      const done = earned.includes(a.id);
+      return `<div style="text-align:center;padding:8px 4px;border-radius:8px;background:${done?'rgba(52,211,153,0.08)':'rgba(255,255,255,0.02)'};border:1px solid ${done?'rgba(52,211,153,0.2)':'rgba(255,255,255,0.05)'};opacity:${done?1:0.4}">
+        <div style="font-size:20px">${done?a.icon:'🔒'}</div>
+        <div style="font-size:9px;color:${done?'var(--green)':'var(--text3)'};margin-top:2px;font-weight:600">${a.title}</div>
+      </div>`;
+    }).join('')}</div>`;
 }
