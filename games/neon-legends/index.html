@@ -20,38 +20,54 @@
 <nav role="navigation"><a href="/" class="logo">⚡ <span>By JTT</span> <span class="badge">STUDIO</span></a>
 <ul class="nav-links"><li><a href="/">Home</a></li><li><a href="/games">Games</a></li><li><a href="/changelog">Changelog</a></li><li><a href="/suggestions">Suggestions</a></li><li><a href="/admin">Admin</a></li></ul></nav>
 
-<main style="padding-top:100px;max-width:900px;margin:0 auto;padding-left:24px;padding-right:24px">
+<main style="padding-top:80px;max-width:1000px;margin:0 auto;padding-left:16px;padding-right:16px">
 
-<div style="display:flex;align-items:center;gap:16px;margin-bottom:8px">
-  <div style="font-size:64px">⚡</div>
+<div style="display:flex;align-items:center;gap:16px;padding-top:24px;margin-bottom:8px">
+  <div style="font-size:56px">⚡</div>
   <div>
-    <div style="font-size:12px;color:var(--violet);text-transform:uppercase;letter-spacing:1px;font-weight:700">AI-Crafted · Free to Play · Constantly Evolving</div>
-    <h1 style="font-size:2.5rem;font-weight:900">Neon Legends</h1>
+    <div style="font-size:11px;color:var(--violet);text-transform:uppercase;letter-spacing:1px;font-weight:700">AI-Crafted · Free to Play · Constantly Evolving</div>
+    <h1 style="font-size:2rem;font-weight:900">Neon Legends</h1>
   </div>
 </div>
 
-<div class="game-info">
-  <div>
-    <p style="color:var(--text2);font-size:15px;line-height:1.7;margin:16px 0">Neon Legends is our flagship AI-crafted idle RPG. Every line of code, every game mechanic, every balance patch is designed and implemented by autonomous AI agents. The game evolves in real-time based on player feedback — when you submit a suggestion, our AI team evaluates it and ships it.</p>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin:16px 0">
-      <a href="/neon-legends" class="btn">▶ Play Now</a>
-      <a href="/suggestions" class="btn btn-ghost">💡 Suggest a Feature</a>
-    </div>
-    <div class="tags">
-      <span>Idle RPG</span><span>Gacha</span><span>AI Crafted</span><span>Free</span><span>PWA</span><span>1,589 Lines</span>
-    </div>
+<div style="display:grid;grid-template-columns:1fr 280px;gap:24px;margin-bottom:40px">
+<div>
+  <p style="color:var(--text2);font-size:14px;line-height:1.7;margin:12px 0">Neon Legends is our flagship AI-crafted idle RPG. Every line of code, every game mechanic, every balance patch is designed and implemented by autonomous AI agents. The game evolves in real-time based on player feedback.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
+    <a href="/neon-legends" class="btn" style="font-size:13px;padding:10px 20px">▶ Play Now</a>
+    <a href="/suggestions" class="btn btn-ghost" style="font-size:13px;padding:10px 20px">💡 Suggest Feature</a>
   </div>
-
-  <div class="stat-grid" style="grid-template-columns:1fr 1fr;margin:0">
-    <div class="stat-item"><div class="num">10</div><div class="label">Updates</div></div>
-    <div class="stat-item"><div class="num">v1.4.0</div><div class="label">Latest</div></div>
-    <div class="stat-item"><div class="num">7</div><div class="label">AI Agents</div></div>
-    <div class="stat-item"><div class="num">1,589</div><div class="label">Lines of Code</div></div>
+  <div class="tags" style="margin-top:8px">
+    <span>Idle RPG</span><span>Gacha</span><span>AI Crafted</span><span>Free</span><span>PWA</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px">
+    <div style="text-align:center;padding:12px 4px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(124,58,237,0.08)">
+      <div style="font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--violet)">10</div>
+      <div style="font-size:9px;color:var(--text3);text-transform:uppercase">Updates</div>
+    </div>
+    <div style="text-align:center;padding:12px 4px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(124,58,237,0.08)">
+      <div style="font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--violet)">v1.4</div>
+      <div style="font-size:9px;color:var(--text3);text-transform:uppercase">Version</div>
+    </div>
+    <div style="text-align:center;padding:12px 4px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(124,58,237,0.08)">
+      <div style="font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--violet)">7</div>
+      <div style="font-size:9px;color:var(--text3);text-transform:uppercase">AI Agents</div>
+    </div>
+    <div style="text-align:center;padding:12px 4px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(124,58,237,0.08)">
+      <div style="font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--violet)">1.5K</div>
+      <div style="font-size:9px;color:var(--text3);text-transform:uppercase">Lines</div>
+    </div>
   </div>
 </div>
 
-<h2 style="font-size:1.3rem;font-weight:800;margin-bottom:16px">📋 Development Changelog</h2>
-<p style="color:var(--text3);font-size:13px;margin-bottom:20px">Every change made by our AI development team, documented automatically. <span id="clCount"></span></p>
+<div style="border-left:1px solid rgba(124,58,237,0.1);padding-left:24px">
+  <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-weight:700;margin-bottom:12px">More Games</div>
+  <div id="moreGames" style="display:flex;flex-direction:column;gap:8px"></div>
+</div>
+</div>
+
+<h2 style="font-size:1.1rem;font-weight:800;margin-bottom:12px">📋 Development Changelog</h2>
+<p style="color:var(--text3);font-size:12px;margin-bottom:16px">Every change made by our AI development team. <span id="clCount"></span></p>
 <div id="changelog"></div>
 
 </main>
@@ -70,18 +86,34 @@ fetch('/changelog.json').then(r => r.json()).then(data => {
   const list = document.getElementById('changelog');
   document.getElementById('clCount').textContent = entries.length + ' total changes';
   list.innerHTML = entries.map(e => `
-    <div class="changelog-entry">
-      <div class="cl-meta">
+    <div class="changelog-entry" style="padding:12px 14px;border-left:3px solid var(--violet);margin-bottom:8px;background:rgba(255,255,255,0.02);border-radius:0 8px 8px 0">
+      <div style="display:flex;gap:8px;font-size:10px;color:var(--text3);align-items:center;flex-wrap:wrap;margin-bottom:4px">
         <span>${new Date(e.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</span>
-        <span class="cl-agent">${e.agent}</span>
-        <span class="cl-type type-${e.type}">${e.type}</span>
+        <span style="padding:1px 6px;border-radius:4px;background:rgba(124,58,237,0.12);color:var(--violet);font-size:9px">${e.agent}</span>
+        <span style="padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;text-transform:uppercase;background:${e.type==='major'?'rgba(219,39,119,0.15)':e.type==='feature'?'rgba(34,211,238,0.15)':e.type==='fix'?'rgba(250,204,21,0.15)':'rgba(52,211,153,0.15)'};color:${e.type==='major'?'var(--magenta)':e.type==='feature'?'var(--cyan)':e.type==='fix'?'var(--gold)':'var(--green)'}">${e.type}</span>
         <span style="margin-left:auto;color:var(--violet)">${e.version}</span>
       </div>
-      <div style="font-size:14px;line-height:1.5">${e.description}</div>
-      <div style="font-size:11px;color:var(--text3);margin-top:4px">${e.commit ? '<a href="https://github.com/jordan-thirkle/neon-legends/commit/'+e.commit+'" style="color:var(--text3)">commit '+e.commit.substring(0,7)+'</a>' : ''}</div>
+      <div style="font-size:13px;line-height:1.5">${e.description}</div>
     </div>
   `).join('');
-}).catch(() => document.getElementById('changelog').innerHTML = '<p style="color:var(--text3)">Loading changelog...</p>');
+}).catch(() => {});
+
+// More games sidebar
+const moreGames = [
+  {icon:'🔫',title:'Glitchfront 194x',link:'/games/glitchfront',tag:'FPS'},
+  {icon:'🌀',title:'Helix Hex',link:'/games/helix-hex',tag:'Strategy'},
+  {icon:'👑',title:'Crown Chaser',link:'/games/crown-chaser',tag:'Arena'},
+  {icon:'⛏️',title:'Aura Depths',link:'/games/aura-depths',tag:'Mining'},
+  {icon:'🌍',title:'Aethoria Online',link:'/games/aethoria',tag:'MMORPG'},
+  {icon:'🎲',title:'VibeGame',link:'/games/vibegame',tag:'Sandbox'}
+];
+const mg = document.getElementById('moreGames');
+if (mg) mg.innerHTML = moreGames.map(g => `
+  <a href="${g.link}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;text-decoration:none;transition:all .2s;background:rgba(255,255,255,0.02);border:1px solid rgba(124,58,237,0.06)">
+    <span style="font-size:24px">${g.icon}</span>
+    <div><div style="font-size:13px;font-weight:600;color:var(--text)">${g.title}</div><span style="font-size:10px;color:var(--text3)">${g.tag}</span></div>
+  </a>
+`).join('');
 </script>
 </body>
 </html>
