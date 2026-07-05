@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Neon Legends — AI-Crafted Idle RPG | By JTT Game Studios</title>
+<meta name="description" content="Neon Legends is an AI-crafted idle RPG. Pull heroes, crush bosses, climb towers, join guilds. Built and continuously improved by autonomous AI agents.">
+<link rel="canonical" href="https://games.byjtt.com/games/neon-legends">
+<meta property="og:title" content="Neon Legends — AI-Crafted Idle RPG">
+<meta property="og:description" content="Built by AI. Play for free.">
+<link rel="stylesheet" href="/css/studio.css">
+<style>
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin:24px 0}
+.stat-item{text-align:center;padding:16px 8px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(124,58,237,0.08)}
+.stat-item .num{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--violet)}
+.stat-item .label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-top:4px}
+.game-info{display:grid;grid-template-columns:2fr 1fr;gap:32px;margin-bottom:40px}
+@media(max-width:768px){.game-info{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav role="navigation"><a href="/" class="logo">⚡ <span>By JTT</span> <span class="badge">STUDIO</span></a>
+<ul class="nav-links"><li><a href="/">Home</a></li><li><a href="/games">Games</a></li><li><a href="/changelog">Changelog</a></li><li><a href="/suggestions">Suggestions</a></li><li><a href="/admin">Admin</a></li></ul></nav>
+
+<main style="padding-top:100px;max-width:900px;margin:0 auto;padding-left:24px;padding-right:24px">
+
+<div style="display:flex;align-items:center;gap:16px;margin-bottom:8px">
+  <div style="font-size:64px">⚡</div>
+  <div>
+    <div style="font-size:12px;color:var(--violet);text-transform:uppercase;letter-spacing:1px;font-weight:700">AI-Crafted · Free to Play · Constantly Evolving</div>
+    <h1 style="font-size:2.5rem;font-weight:900">Neon Legends</h1>
+  </div>
+</div>
+
+<div class="game-info">
+  <div>
+    <p style="color:var(--text2);font-size:15px;line-height:1.7;margin:16px 0">Neon Legends is our flagship AI-crafted idle RPG. Every line of code, every game mechanic, every balance patch is designed and implemented by autonomous AI agents. The game evolves in real-time based on player feedback — when you submit a suggestion, our AI team evaluates it and ships it.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin:16px 0">
+      <a href="/neon-legends" class="btn">▶ Play Now</a>
+      <a href="/suggestions" class="btn btn-ghost">💡 Suggest a Feature</a>
+    </div>
+    <div class="tags">
+      <span>Idle RPG</span><span>Gacha</span><span>AI Crafted</span><span>Free</span><span>PWA</span><span>1,589 Lines</span>
+    </div>
+  </div>
+
+  <div class="stat-grid" style="grid-template-columns:1fr 1fr;margin:0">
+    <div class="stat-item"><div class="num">10</div><div class="label">Updates</div></div>
+    <div class="stat-item"><div class="num">v1.4.0</div><div class="label">Latest</div></div>
+    <div class="stat-item"><div class="num">7</div><div class="label">AI Agents</div></div>
+    <div class="stat-item"><div class="num">1,589</div><div class="label">Lines of Code</div></div>
+  </div>
+</div>
+
+<h2 style="font-size:1.3rem;font-weight:800;margin-bottom:16px">📋 Development Changelog</h2>
+<p style="color:var(--text3);font-size:13px;margin-bottom:20px">Every change made by our AI development team, documented automatically. <span id="clCount"></span></p>
+<div id="changelog"></div>
+
+</main>
+
+<footer role="contentinfo" style="margin-top:80px">
+<div class="footer-grid">
+<div><h4>By JTT Game Studios</h4><p style="font-size:13px;color:var(--text3)">AI-powered game development.</p></div>
+<div><h4>Links</h4><a href="/games">All Games</a><a href="/changelog">Full Changelog</a><a href="/suggestions">Suggestions</a></div>
+<div><h4>Connect</h4><div class="social"><a href="https://github.com/jordan-thirkle">🐙</a><a href="https://x.com/jordanthirkle">🐦</a></div></div></div>
+<div class="bottom">© 2026 By JTT Game Studios</div>
+</footer>
+
+<script>
+fetch('/changelog.json').then(r => r.json()).then(data => {
+  const entries = data.filter(e => e.game === 'neon-legends').sort((a,b) => new Date(b.date) - new Date(a.date));
+  const list = document.getElementById('changelog');
+  document.getElementById('clCount').textContent = entries.length + ' total changes';
+  list.innerHTML = entries.map(e => `
+    <div class="changelog-entry">
+      <div class="cl-meta">
+        <span>${new Date(e.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</span>
+        <span class="cl-agent">${e.agent}</span>
+        <span class="cl-type type-${e.type}">${e.type}</span>
+        <span style="margin-left:auto;color:var(--violet)">${e.version}</span>
+      </div>
+      <div style="font-size:14px;line-height:1.5">${e.description}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">${e.commit ? '<a href="https://github.com/jordan-thirkle/neon-legends/commit/'+e.commit+'" style="color:var(--text3)">commit '+e.commit.substring(0,7)+'</a>' : ''}</div>
+    </div>
+  `).join('');
+}).catch(() => document.getElementById('changelog').innerHTML = '<p style="color:var(--text3)">Loading changelog...</p>');
+</script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Development Changelog — By JTT Game Studios</title>
+<meta name="description" content="Complete development changelog for all games built by By JTT Game Studios. Every update, feature, and fix made by our autonomous AI agents.">
+<link rel="canonical" href="https://games.byjtt.com/changelog">
+<link rel="stylesheet" href="/css/studio.css">
+<style>
+.changelog-entry{padding:16px;border-left:3px solid var(--violet);margin-bottom:12px;background:rgba(255,255,255,0.02);border-radius:0 8px 8px 0;transition:all .2s}
+.changelog-entry:hover{background:rgba(124,58,237,0.04)}
+.changelog-entry .cl-meta{display:flex;gap:12px;font-size:11px;color:var(--text3);margin-bottom:4px;align-items:center;flex-wrap:wrap}
+.changelog-entry .cl-agent{font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(124,58,237,0.12);color:var(--violet)}
+.changelog-entry .cl-type{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;text-transform:uppercase}
+.type-major{background:rgba(219,39,119,0.15);color:var(--magenta)}
+.type-feature{background:rgba(34,211,238,0.15);color:var(--cyan)}
+.type-fix{background:rgba(250,204,21,0.15);color:var(--gold)}
+.type-polish{background:rgba(52,211,153,0.15);color:var(--green)}
+.type-infrastructure{background:rgba(124,58,237,0.15);color:var(--violet)}
+.game-badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600;cursor:pointer}
+.game-badge.neon-legends{background:rgba(250,204,21,0.12);color:var(--gold)}
+.filter-bar{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.filter-bar button{padding:8px 16px;border-radius:8px;border:1px solid rgba(124,58,237,0.12);background:rgba(255,255,255,0.03);color:var(--text2);cursor:pointer;font-size:12px;transition:all .2s;font-weight:600}
+.filter-bar button.active{background:rgba(124,58,237,0.15);border-color:var(--violet);color:var(--text)}
+.filter-bar button:hover{border-color:var(--violet)}
+</style>
+</head>
+<body>
+<nav role="navigation"><a href="/" class="logo">⚡ <span>By JTT</span> <span class="badge">STUDIO</span></a>
+<ul class="nav-links"><li><a href="/">Home</a></li><li><a href="/games">Games</a></li><li><a href="/changelog">Changelog</a></li><li><a href="/suggestions">Suggestions</a></li><li><a href="/admin">Admin</a></li></ul></nav>
+
+<main style="padding-top:100px;max-width:800px;margin:0 auto;padding-left:24px;padding-right:24px">
+
+<h1 style="font-size:2rem;font-weight:900;margin-bottom:4px">📋 Development Changelog</h1>
+<p style="color:var(--text2);margin-bottom:32px">Every change made by our autonomous AI development team, documented automatically. <span id="totalCount" style="color:var(--violet);font-weight:700"></span></p>
+
+<div class="filter-bar" id="filterBar">
+  <button class="active" data-game="all">All Games</button>
+  <button data-game="neon-legends">⚡ Neon Legends</button>
+</div>
+
+<div id="changelogList"></div>
+
+</main>
+
+<footer role="contentinfo" style="margin-top:80px">
+<div class="bottom">© 2026 By JTT Game Studios · <a href="/sitemap.xml" style="color:var(--violet)">Sitemap</a></div>
+</footer>
+
+<script>
+const GAME_NAMES = {'neon-legends':'Neon Legends'};
+
+fetch('/changelog.json').then(r => r.json()).then(allData => {
+  document.getElementById('totalCount').textContent = allData.length + ' total changes';
+
+  function render(game) {
+    const list = document.getElementById('changelogList');
+    const data = game === 'all' ? allData : allData.filter(e => e.game === game);
+    const sorted = data.sort((a,b) => new Date(b.date) - new Date(a.date));
+    list.innerHTML = sorted.map(e => `
+      <div class="changelog-entry">
+        <div class="cl-meta">
+          <span>${new Date(e.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+          <span class="cl-agent">${e.agent}</span>
+          <span class="cl-type type-${e.type}">${e.type}</span>
+          <span class="game-badge ${e.game}">${GAME_NAMES[e.game]||e.game}</span>
+          <span style="margin-left:auto">${e.version}</span>
+        </div>
+        <div style="font-size:14px;line-height:1.5">${e.description}</div>
+        ${e.commit ? '<div style="font-size:11px;color:var(--text3);margin-top:4px"><a href="https://github.com/jordan-thirkle/neon-legends/commit/'+e.commit+'" style="color:var(--text3)">commit '+e.commit.substring(0,7)+'</a></div>' : ''}
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('filterBar').addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    document.querySelectorAll('#filterBar button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render(btn.dataset.game);
+  });
+
+  render('all');
+});
+</script>
+</body>
+</html>

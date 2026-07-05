@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Game Portfolio — By JTT Game Studios</title>
+<meta name="description" content="Play AI-crafted games from By JTT Studios. Idle RPGs, FPS games, MMORPGs, strategy games — all built by autonomous AI agents.">
+<link rel="canonical" href="https://games.byjtt.com/games">
+<meta property="og:title" content="Game Portfolio — By JTT Game Studios">
+<meta property="og:description" content="Play AI-crafted games. Each title continuously improved by autonomous AI agents.">
+<link rel="stylesheet" href="/css/studio.css">
+<style>
+.featured-card{display:grid;grid-template-columns:1fr 1fr;gap:24px;border-radius:var(--radius);overflow:hidden;background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid rgba(124,58,237,0.15);margin-bottom:40px;transition:all .3s}
+.featured-card:hover{transform:translateY(-4px);box-shadow:0 20px 60px rgba(124,58,237,0.15);border-color:var(--violet)}
+.featured-card .thumb{display:flex;align-items:center;justify-content:center;font-size:120px;background:radial-gradient(circle,rgba(124,58,237,0.12),transparent);min-height:300px}
+.featured-card .info{padding:32px 32px 32px 0}
+.featured-card .info h2{font-size:24px;font-weight:900}
+.featured-card .info .stats{display:flex;gap:16px;margin-top:12px}
+.featured-card .info .stats span{font-size:12px;color:var(--text3)}
+.featured-card .info .stats strong{color:var(--text);font-size:14px;display:block}
+.changelog-entry{padding:16px;border-left:3px solid var(--violet);margin-bottom:12px;background:rgba(255,255,255,0.02);border-radius:0 8px 8px 0;transition:all .2s}
+.changelog-entry:hover{background:rgba(124,58,237,0.04)}
+.changelog-entry .cl-meta{display:flex;gap:12px;font-size:11px;color:var(--text3);margin-bottom:4px;align-items:center}
+.changelog-entry .cl-agent{font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(124,58,237,0.12);color:var(--violet)}
+.changelog-entry .cl-type{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;text-transform:uppercase}
+.type-major{background:rgba(219,39,119,0.15);color:var(--magenta)}
+.type-feature{background:rgba(34,211,238,0.15);color:var(--cyan)}
+.type-fix{background:rgba(250,204,21,0.15);color:var(--gold)}
+.type-polish{background:rgba(52,211,153,0.15);color:var(--green)}
+.type-infrastructure{background:rgba(124,58,237,0.15);color:var(--violet)}
+.filter-bar{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.filter-bar button{padding:8px 16px;border-radius:8px;border:1px solid rgba(124,58,237,0.12);background:rgba(255,255,255,0.03);color:var(--text2);cursor:pointer;font-size:12px;transition:all .2s;font-weight:600}
+.filter-bar button.active{background:rgba(124,58,237,0.15);border-color:var(--violet);color:var(--text)}
+.filter-bar button:hover{border-color:var(--violet)}
+.game-card .changelog-count{position:absolute;top:12px;right:12px;font-size:10px;padding:3px 8px;border-radius:6px;background:rgba(124,58,237,0.15);color:var(--cyan);font-weight:700;z-index:2}
+@media(max-width:768px){.featured-card{grid-template-columns:1fr}.featured-card .info{padding:24px}}
+</style>
+</head>
+<body>
+<nav role="navigation"><a href="/" class="logo">⚡ <span>By JTT</span> <span class="badge">STUDIO</span></a>
+<button class="mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+<ul class="nav-links">
+<li><a href="/">Home</a></li><li><a href="/games" class="active">Games</a></li><li><a href="/changelog">Changelog</a></li><li><a href="/suggestions">Suggestions</a></li><li><a href="/admin">Admin</a></li>
+</ul></nav>
+
+<main style="padding-top:100px;max-width:1100px;margin:0 auto;padding-left:24px;padding-right:24px">
+
+<h1 style="font-size:2.2rem;font-weight:900;margin-bottom:4px">🎮 Game Portfolio</h1>
+<p style="color:var(--text2);margin-bottom:32px">Every game is designed, built, and continuously improved by autonomous AI agents. <span id="totalChanges" style="color:var(--violet);font-weight:700"></span></p>
+
+<!-- Featured Game -->
+<div class="featured-card" onclick="location.href='/games/neon-legends'" style="cursor:pointer">
+  <div class="thumb">⚡</div>
+  <div class="info">
+    <div style="font-size:11px;color:var(--violet);text-transform:uppercase;letter-spacing:1px;font-weight:700">Featured Game</div>
+    <h2>Neon Legends</h2>
+    <p style="color:var(--text2);font-size:14px;margin:8px 0 12px;line-height:1.6">AI-crafted idle RPG with gacha heroes, boss battles, tower climbing, guild raids, and autonomous game systems. Built entirely by AI agents. 1,589 lines of code, 11 gameplay systems, 10 documented updates.</p>
+    <div class="stats">
+      <span><strong>Playable</strong>Web</span>
+      <span><strong>v1.4.0</strong>Latest</span>
+      <span><strong>10</strong>Updates</span>
+      <span><strong>7</strong>AI Agents</span>
+    </div>
+    <div style="margin-top:16px">
+      <span class="btn btn-sm">▶ Play Now</span>
+      <span class="btn btn-sm btn-ghost">📋 Changelog</span>
+    </div>
+  </div>
+</div>
+
+<!-- All Games -->
+<div class="filter-bar" id="filterBar">
+  <button class="active" data-filter="all">All Games</button>
+  <button data-filter="playable">Playable</button>
+  <button data-filter="development">In Development</button>
+  <button data-filter="prototype">Prototype</button>
+</div>
+
+<div class="game-grid" id="gameGrid"></div>
+
+</main>
+
+<footer role="contentinfo" style="margin-top:80px">
+<div class="footer-grid">
+<div><h4>By JTT Game Studios</h4><p style="font-size:13px;color:var(--text3)">AI-powered game development. Ideas become games.</p><p style="margin-top:6px;font-size:12px"><a href="https://byjtt.com" style="color:var(--violet)">← byjtt.com</a></p></div>
+<div><h4>Portfolio</h4><a href="/games">All Games</a><a href="/changelog">Changelog</a><a href="/suggestions">Suggestions</a></div>
+<div><h4>Connect</h4><div class="social"><a href="https://github.com/jordan-thirkle">🐙</a><a href="https://x.com/jordanthirkle">🐦</a></div></div></div>
+<div class="bottom">© 2026 By JTT Game Studios · <a href="/privacy" style="color:var(--violet)">Privacy</a></div>
+</footer>
+
+<script>
+const GAMES = [
+  {id:'neon-legends',title:'Neon Legends',icon:'⚡',status:'playable',desc:'AI-crafted idle RPG. Gacha heroes, boss battles, tower climbing, guild raids.',tags:['Idle RPG','Gacha','AI Crafted','Playable'],changelogCount:10,link:'/games/neon-legends'},
+  {id:'glitchfront',title:'Glitchfront 194x',icon:'🔫',status:'development',desc:'High-octane browser/desktop FPS in Godot 4.6. WWII tactical combat, neon-cyber aesthetics.',tags:['FPS','Godot 4.6','Multiplayer','In Development'],changelogCount:0,link:'https://github.com/jordan-thirkle/glitchfront-194x'},
+  {id:'aethoria',title:'Aethoria Online',icon:'🌍',status:'development',desc:'2D browser MMORPG. RuneScape-style open world with skills, combat, quests, trading.',tags:['MMORPG','Browser','Open World','In Development'],changelogCount:0,link:'https://github.com/jordan-thirkle/aethoria-online'},
+  {id:'helix-hex',title:'Helix Hex',icon:'🌀',status:'development',desc:'Tactical hex-based strategy. Faction mechanics, procedurally generated battlefields.',tags:['Strategy','Hex-Based','Procedural','In Development'],changelogCount:0,link:'https://github.com/jordan-thirkle/helix-hex'},
+  {id:'aura-depths',title:'Aura Depths',icon:'⛏️',status:'development',desc:'Voxel mining game on Roblox. RNG aura collection, zone debuffs, quests.',tags:['Roblox','Mining','Voxel','In Development'],changelogCount:0,link:'https://github.com/jordan-thirkle/AuraDepths'},
+  {id:'crown-chaser',title:'Crown Chaser',icon:'👑',status:'development',desc:'Competitive multiplayer arena. Chase the crown, claim the throne.',tags:['Multiplayer','Arena','Competitive','In Development'],changelogCount:0,link:'https://github.com/jordan-thirkle/CrownChaserGame'},
+  {id:'vibegame',title:'VibeGame',icon:'🎲',status:'prototype',desc:'Experimental AI-designed game. Rapid prototyping playground.',tags:['Experimental','AI Designed','Prototype'],changelogCount:0,link:'https://github.com/jordan-thirkle/VibeGame'}
+];
+
+function renderGames(filter) {
+  const grid = document.getElementById('gameGrid');
+  const filtered = filter === 'all' ? GAMES : GAMES.filter(g => g.status === filter);
+  grid.innerHTML = filtered.map(g => `
+    <div class="game-card" onclick="${g.link ? "location.href='"+g.link+"'" : ''}">
+      ${g.changelogCount ? `<div class="changelog-count">${g.changelogCount} updates</div>` : ''}
+      <div class="thumb">${g.icon}</div>
+      <div class="info">
+        <h3>${g.title}</h3>
+        <p>${g.desc}</p>
+        <div class="tags">${g.tags.map(t => `<span>${t}</span>`).join('')}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateChangeCount() {
+  fetch('/changelog.json').then(r => r.json()).then(data => {
+    document.getElementById('totalChanges').textContent = data.length + ' total updates across all games';
+  }).catch(() => {});
+}
+
+document.getElementById('filterBar').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('#filterBar button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGames(btn.dataset.filter);
+});
+
+renderGames('all');
+updateChangeCount();
+</script>
+</body>
+</html>
