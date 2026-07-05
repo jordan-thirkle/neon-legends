@@ -49,7 +49,7 @@
 <a href="#main" class="skip-link">Skip to main content</a>
 
 <nav role="navigation" aria-label="Main navigation">
-  <a href="/" class="logo">⚡ <span>By JTT</span> Studios</a>
+  <a href="/" class="logo">⚡ <span>By JTT</span> <span class="badge">STUDIO</span></a>
   <button class="mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Toggle menu">☰</button>
   <ul class="nav-links">
     <li><a href="/">Games</a></li>
@@ -62,8 +62,10 @@
 </nav>
 
 <header class="hero" role="banner">
-  <div class="orb" style="width:400px;height:400px;background:var(--violet);top:-100px;left:-100px;"></div>
-  <div class="orb" style="width:300px;height:300px;background:var(--magenta);bottom:-50px;right:-50px;animation-delay:-5s;"></div>
+  <div class="grid-bg"></div>
+  <div class="orb" style="width:500px;height:500px;background:var(--violet);top:-150px;left:-100px;animation-duration:25s;"></div>
+  <div class="orb" style="width:350px;height:350px;background:var(--magenta);bottom:-80px;right:-80px;animation-delay:-8s;animation-duration:30s;"></div>
+  <div class="orb" style="width:200px;height:200px;background:var(--cyan);top:50%;left:60%;animation-delay:-15s;animation-duration:22s;opacity:0.15;"></div>
   <h1 class="animate-in">We Don't Just Make Games.<br>AI <span class="gradient">Builds Them.</span></h1>
   <p class="animate-in animate-in-d1">By JTT Game Studios is pioneering autonomous game development. Our AI agents design, code, balance, and deploy games 24/7 — evolving them in real-time based on player feedback.</p>
   <div class="cta-group animate-in animate-in-d2">
@@ -91,72 +93,72 @@
       <div class="play-btn">▶</div>
     </div>
 
-    <div class="game-card" onclick="location.href='https://github.com/jordan-thirkle/glitchfront-194x'">
+    <div class="game-card">
       <div class="thumb">🔫</div>
       <div class="info">
         <h3>Glitchfront 194x</h3>
-        <p>High-octane browser/desktop FPS built in Godot 4.6. Digitized WWII tactical combat with neon-cyber aesthetics, deep weapon progression, attachments, and multiplayer.</p>
+        <p>High-octane browser/desktop FPS built in Godot 4.6. Digitized WWII tactical combat with neon-cyber aesthetics, deep weapon progression, attachments, and multiplayer. <em>Private repo.</em></p>
         <div class="tags">
           <span>FPS</span>
           <span>Godot 4.6</span>
           <span>Multiplayer</span>
-          <span>In Dev</span>
+          <span>In Development</span>
         </div>
       </div>
     </div>
 
-    <div class="game-card" onclick="location.href='https://github.com/jordan-thirkle/aethoria-online'">
+    <div class="game-card">
       <div class="thumb">🌍</div>
       <div class="info">
         <h3>Aethoria Online</h3>
-        <p>2D browser MMORPG — RuneScape-style open world with skills, combat, quests, and player trading. Built from the ground up as a persistent browser-based world.</p>
+        <p>2D browser MMORPG — RuneScape-style open world with skills, combat, quests, and player trading. Persistent browser-based world with autonomous AI agent development team. <em>Private repo.</em></p>
         <div class="tags">
           <span>MMORPG</span>
           <span>Browser</span>
           <span>Open World</span>
-          <span>In Dev</span>
+          <span>In Development</span>
         </div>
       </div>
     </div>
 
-    <div class="game-card" onclick="location.href='https://github.com/jordan-thirkle/helix-hex'">
+    <div class="game-card">
       <div class="thumb">🌀</div>
       <div class="info">
         <h3>Helix Hex</h3>
-        <p>Tactical hex-based strategy game. Deep positional gameplay with unique faction mechanics and procedurally generated battlefields.</p>
+        <p>Tactical hex-based strategy game. Deep positional gameplay with unique faction mechanics and procedurally generated battlefields. <em>Private repo.</em></p>
         <div class="tags">
           <span>Strategy</span>
           <span>Hex-Based</span>
           <span>Procedural</span>
-          <span>In Dev</span>
+          <span>In Development</span>
         </div>
       </div>
     </div>
 
-    <div class="game-card" onclick="location.href='https://github.com/jordan-thirkle/AuraDepths'">
+    <div class="game-card">
       <div class="thumb">⛏️</div>
       <div class="info">
         <h3>Aura Depths</h3>
-        <p>Procedurally-generated voxel mining game on Roblox. Weighted RNG aura collection, zone debuffs, quest progression, and deep mining mechanics.</p>
+        <p>Procedurally-generated voxel mining game on Roblox. Weighted RNG aura collection, zone debuffs, quest progression, and deep mining mechanics. <em>Private repo.</em></p>
         <div class="tags">
           <span>Roblox</span>
           <span>Mining</span>
           <span>Voxel</span>
-          <span>Live</span>
+          <span>In Development</span>
         </div>
       </div>
     </div>
 
-    <div class="game-card" onclick="location.href='https://github.com/jordan-thirkle/CrownChaserGame'">
+    <div class="game-card">
       <div class="thumb">👑</div>
       <div class="info">
         <h3>Crown Chaser</h3>
-        <p>Competitive multiplayer game — chase the crown, claim the throne. Fast-paced arena combat with unique power-ups and map control mechanics.</p>
+        <p>Competitive multiplayer game — chase the crown, claim the throne. Fast-paced arena combat with unique power-ups and map control mechanics. <em>Private repo.</em></p>
         <div class="tags">
           <span>Multiplayer</span>
           <span>Arena</span>
           <span>Competitive</span>
-          <span>In Dev</span>
+          <span>In Development</span>
         </div>
       </div>
     </div>
@@ -291,18 +293,10 @@ document.querySelectorAll('.nav-links a').forEach(a => a.addEventListener('click
 if ('IntersectionObserver' in window) {
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.style.opacity = '1';
-        entry.target.style.transform = 'translateY(0)';
-      }
+      if (entry.isIntersecting) entry.target.classList.add('visible');
     });
-  }, { threshold: 0.1 });
-  document.querySelectorAll('.animate-in').forEach(el => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(30px)';
-    el.style.transition = 'opacity .6s ease, transform .6s ease';
-    observer.observe(el);
-  });
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+  document.querySelectorAll('.animate-in').forEach(el => observer.observe(el));
 }
 </script>
 </body>
