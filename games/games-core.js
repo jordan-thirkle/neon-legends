@@ -12,21 +12,42 @@ const GAME_IDS = {
   'neon-legends': 'Neon Legends'
 };
 
+/* ── Player Identity ── */
+function getPlayerName() {
+  try { return localStorage.getItem(GAMES_PREFIX + 'player_name') || 'Anonymous'; } catch(e) { return 'Anonymous'; }
+}
+function setPlayerName(name) {
+  try { localStorage.setItem(GAMES_PREFIX + 'player_name', name.trim() || 'Anonymous'); } catch(e) {}
+}
+function getPlayerStats() {
+  try { return JSON.parse(localStorage.getItem(GAMES_PREFIX + 'player_stats') || '{}'); } catch(e) { return {}; }
+}
+function updatePlayerStats(gameId, score) {
+  const stats = getPlayerStats();
+  if (!stats[gameId]) stats[gameId] = {plays:0,highScore:0,totalScore:0};
+  stats[gameId].plays = (stats[gameId].plays || 0) + 1;
+  stats[gameId].totalScore = (stats[gameId].totalScore || 0) + (score || 0);
+  if (score > (stats[gameId].highScore || 0)) stats[gameId].highScore = score;
+  try { localStorage.setItem(GAMES_PREFIX + 'player_stats', JSON.stringify(stats)); } catch(e) {}
+}
+
 /* ── High Score System ── */
 function submitScore(gameId, score, playerName) {
   if (!gameId || score == null) return;
+  const name = playerName || getPlayerName();
   const key = GAMES_PREFIX + 'scores_' + gameId;
   let scores = [];
   try { scores = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
   scores.push({
-    name: playerName || 'Anonymous',
+    name: name,
     score: Math.floor(score),
     date: Date.now(),
     id: Date.now().toString(36) + Math.random().toString(36).substr(2,4)
   });
   scores.sort((a,b) => b.score - a.score);
-  scores = scores.slice(0, 50); // keep top 50
+  scores = scores.slice(0, 50);
   localStorage.setItem(key, JSON.stringify(scores));
+  updatePlayerStats(gameId, score);
 }
 
 function getLeaderboard(gameId, limit) {

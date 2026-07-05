@@ -73,7 +73,8 @@
 <nav role="navigation"><a href="/" class="logo">⚡ <span>By JTT</span> <span class="badge">STUDIO</span></a>
 <button class="mobile-toggle">☰</button>
 <ul class="nav-links">
-<li><a href="/">Home</a></li><li><a href="/games" class="active">Games</a></li><li><a href="/changelog">Changelog</a></li><li><a href="/suggestions">Suggestions</a></li><li><a href="/admin">Admin</a></li>
+<li><a href="/">Home</a></li><li><a href="/games" class="active">Games</a></li><li><a href="/changelog">Changelog</a></li><li><a href="/suggestions">Suggestions</a></li>
+<li style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3)">👤 <span id="navPlayerName">Guest</span></li>
 </ul></nav>
 
 <main style="max-width:1100px;margin:0 auto;padding:100px 16px 40px">
@@ -81,8 +82,14 @@
 <div class="portal-hero">
   <h1>🎮 <span style="background:linear-gradient(135deg,var(--violet),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Play Games</span> Built by AI</h1>
   <p>Every game is designed, coded, and continuously improved by autonomous AI agents. Free to play in your browser.</p>
+  <!-- Player Identity -->
+  <div style="display:flex;align-items:center;gap:8px;justify-content:center;margin-top:12px">
+    <span style="font-size:13px;color:var(--text2)">👤 Player:</span>
+    <input id="playerNameInput" type="text" placeholder="Your name" maxlength="20" style="padding:6px 12px;border-radius:8px;border:1px solid rgba(124,58,237,0.2);background:rgba(255,255,255,0.04);color:#fff;font-size:13px;width:160px;outline:none" onchange="savePlayerName()">
+    <span style="font-size:11px;color:var(--text3)" id="playerStatsDisplay"></span>
+  </div>
   <!-- Search -->
-  <div style="max-width:400px;margin:16px auto 0;position:relative">
+  <div style="max-width:400px;margin:12px auto 0;position:relative">
     <input id="gameSearch" type="text" placeholder="🔍 Search games..." style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid rgba(124,58,237,0.2);background:rgba(255,255,255,0.04);color:#fff;font-size:14px;outline:none" oninput="filterGames(this.value)">
   </div>
 </div>
@@ -190,6 +197,25 @@ function showFeatured(i) {
 }
 showFeatured(0);
 setInterval(() => { featuredIdx = (featuredIdx + 1) % featuredGames.length; showFeatured(featuredIdx); }, 8000);
+
+// Player identity
+const pInput = document.getElementById('playerNameInput');
+if (pInput) {
+  const saved = getPlayerName();
+  pInput.value = saved === 'Anonymous' ? '' : saved;
+  document.getElementById('navPlayerName').textContent = saved;
+}
+function savePlayerName() {
+  const name = document.getElementById('playerNameInput').value.trim() || 'Anonymous';
+  setPlayerName(name);
+  document.getElementById('navPlayerName').textContent = name;
+  // Update stats
+  const stats = getPlayerStats();
+  const totalPlays = Object.values(stats).reduce((a,b) => a + (b.plays||0), 0);
+  const totalScore = Object.values(stats).reduce((a,b) => a + (b.totalScore||0), 0);
+  document.getElementById('playerStatsDisplay').textContent = `${totalPlays} plays · ${totalScore.toLocaleString()} total score`;
+}
+savePlayerName();
 </script>
 </body>
 </html>
