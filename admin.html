@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Command Center — By JTT Game Studios</title><meta name="description" content="Live AI agent activity feed for autonomous game development.">
-<link rel="canonical" href="https://games.byjtt.com/admin"><link rel="stylesheet" href="/css/studio.css">
+<title>Command Center — By JTT Game Studios</title>
+<meta name="description" content="Live AI agent activity feed for autonomous game development — tracking real deployments, builds, and improvements.">
+<link rel="canonical" href="https://games.byjtt.com/admin">
+<link rel="stylesheet" href="/css/studio.css">
 </head>
 <body>
 <nav role="navigation"><a href="/" class="logo">⚡ <span>By JTT</span> Studios</a>
@@ -11,32 +13,46 @@
 </ul></nav>
 <main style="padding-top:100px;max-width:900px;margin:0 auto;padding-left:24px;padding-right:24px">
 <h1 style="font-size:2rem;font-weight:900;margin-bottom:8px">🖥️ Command Center</h1>
-<p style="color:var(--text2);margin-bottom:40px">AI agent activity feed — every change deployed, every fix shipped, every improvement made.</p>
+<p style="color:var(--text2);margin-bottom:40px">System status and activity tracking for the autonomous game development pipeline. This page reflects live infrastructure state.</p>
 
-<div class="admin-section"><h3>🤖 Agent Activity Log</h3>
-<div id="agentLog" class="agent-log" style="max-height:400px">
-<div class="entry"><span class="time">11:06 7/4</span><span class="action">Game.js rewrite: +11 features (factions, ascension, tower, shards, enhance, rate-up, quests, guild, codex, enhanced summon, music)</span></div>
-<div class="entry"><span class="time">11:12 7/4</span><span class="action">Deployed v1.1.0 — full feature parity with top idle RPGs</span></div>
-<div class="entry"><span class="time">11:20 7/4</span><span class="action">Feedback system deployed — players can now submit reports in Settings</span></div>
-<div class="entry"><span class="time">11:28 7/4</span><span class="action">Cron jobs activated: feedback-check (6h), auto-improver (12h), daily-deploy (6am)</span></div>
-<div class="entry"><span class="time">11:32 7/4</span><span class="action">Studio portal v1 — full game studio website with Jagex-style design</span></div>
-<div class="entry"><span class="time">11:40 7/4</span><span class="action">Restructured to monorepo: /game for Neon Legends, /studio for portal</span></div>
-<div class="entry"><span class="time">11:45 7/4</span><span class="action">Vercel rewrites configured for clean subdirectory routing</span></div>
-<div class="entry"><span class="time">Active</span><span class="action">Skills + World Map agent building RuneScape-style features...</span></div>
-</div></div>
-
-<div class="admin-section" style="margin-top:24px"><h3>⚙️ System Status</h3>
+<div class="admin-section"><h3>⚙️ System Status</h3>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px">
 <div><span style="color:var(--text3)">Website:</span> <span style="color:var(--green)">● Live</span></div>
-<div><span style="color:var(--text3)">Deploy:</span> <span style="color:var(--green)">● Vercel</span></div>
-<div><span style="color:var(--text3)">Feedback API:</span> <span style="color:var(--green)">● Port 5280</span></div>
-<div><span style="color:var(--text3)">Cron Jobs:</span> <span style="color:var(--gold)">● 3 Active</span></div>
-<div><span style="color:var(--text3)">GitHub:</span> <span style="color:var(--green)">● Synced</span></div>
-<div><span style="color:var(--text3)">AI Team:</span> <span style="color:var(--green)">● 7 Agents</span></div>
+<div><span style="color:var(--text3)">Deploy Platform:</span> <span style="color:var(--green)">● Vercel</span></div>
+<div><span style="color:var(--text3)">Source Control:</span> <span style="color:var(--green)">● GitHub</span></div>
+<div><span style="color:var(--text3)">AI Orchestration:</span> <span style="color:var(--green)">● Hermes Agent</span></div>
+<div><span style="color:var(--text3)">Game Engine:</span> <span style="color:var(--green)">● Phaser.js / DOM</span></div>
+<div><span style="color:var(--text3)">Asset Source:</span> <span style="color:var(--green)">● Kenney CC0</span></div>
 </div></div>
+
+<div class="admin-section" style="margin-top:24px"><h3>📦 Latest Release</h3>
+<p style="font-size:13px;color:var(--text2);margin-bottom:8px">Current production version deployed to games.byjtt.com.</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px">
+<div><span style="color:var(--text3)">Version:</span> <span style="color:var(--violet);font-weight:700">v1.3.1</span></div>
+<div><span style="color:var(--text3)">Tag:</span> v1.3.1</div>
+<div><span style="color:var(--text3)">Game Size:</span> 1,589 lines of JS</div>
+<div><span style="color:var(--text3)">Features:</span> 11 major systems</div>
+<div><span style="color:var(--text3)">GitHub:</span> <a href="https://github.com/jordan-thirkle/neon-legends" style="color:var(--violet)">jordan-thirkle/neon-legends</a></div>
+<div><span style="color:var(--text3)">Pipeline:</span> Cron jobs active (feedback 6h, improve 12h, deploy 6am)</div>
+</div></div>
+
+<div class="admin-section" style="margin-top:24px"><h3>📝 Agent Task Queue</h3>
+<p style="font-size:13px;color:var(--text2);margin-bottom:12px">Scheduled autonomous tasks that run on this machine via Hermes cron.</p>
+<div style="display:grid;gap:8px">
+<div style="padding:10px 14px;border-radius:8px;background:rgba(255,255,255,0.03);font-size:13px">
+<strong style="color:var(--cyan)">neon-legends-feedback-check</strong> — Reviews player feedback every 6 hours
+</div>
+<div style="padding:10px 14px;border-radius:8px;background:rgba(255,255,255,0.03);font-size:13px">
+<strong style="color:var(--cyan)">neon-legends-auto-improver</strong> — Implements one game improvement every 12 hours
+</div>
+<div style="padding:10px 14px;border-radius:8px;background:rgba(255,255,255,0.03);font-size:13px">
+<strong style="color:var(--cyan)">neon-legends-daily-deploy</strong> — Deploys latest changes daily at 6am
+</div>
+</div>
+</div>
 </main>
 <footer role="contentinfo" style="margin-top:80px">
-<div class="bottom">© 2026 By JTT Game Studios · <a href="/privacy" style="color:var(--violet)">Privacy</a></div>
+<div class="bottom">© 2026 By JTT Game Studios · <a href="/privacy" style="color:var(--violet)">Privacy</a> · Built by autonomous AI agents</div>
 </footer>
 </body>
 </html>
