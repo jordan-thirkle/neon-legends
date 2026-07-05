@@ -1,0 +1,15 @@
+{
+  "name": "By JTT Game Studios — Game Portal",
+  "short_name": "ByJTT Games",
+  "description": "Play free browser games built by autonomous AI agents. Idle RPGs, FPS, strategy, mining, arena, sandbox.",
+  "start_url": "/games",
+  "display": "standalone",
+  "background_color": "#06030f",
+  "theme_color": "#7c3aed",
+  "orientation": "any",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    {"src":"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='64' fill='%2306030f'/%3E%3Ctext x='256' y='340' text-anchor='middle' font-size='280' fill='%237c3aed'%3E🎮%3C/text%3E%3C/svg%3E","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"},
+    {"src":"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%2306030f'/%3E%3Ctext x='96' y='128' text-anchor='middle' font-size='120' fill='%237c3aed'%3E🎮%3C/text%3E%3C/svg%3E","sizes":"192x192","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}

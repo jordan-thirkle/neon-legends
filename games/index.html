@@ -81,30 +81,24 @@
 <div class="portal-hero">
   <h1>🎮 <span style="background:linear-gradient(135deg,var(--violet),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Play Games</span> Built by AI</h1>
   <p>Every game is designed, coded, and continuously improved by autonomous AI agents. Free to play in your browser.</p>
+  <!-- Search -->
+  <div style="max-width:400px;margin:16px auto 0;position:relative">
+    <input id="gameSearch" type="text" placeholder="🔍 Search games..." style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid rgba(124,58,237,0.2);background:rgba(255,255,255,0.04);color:#fff;font-size:14px;outline:none" oninput="filterGames(this.value)">
+  </div>
 </div>
 
-<!-- Featured -->
+<!-- Play Count Stats -->
+<div id="gameStats"></div>
+
+<!-- Featured Carousel -->
 <div class="featured-row">
-  <div class="featured-main" onclick="location.href='/games/neon-legends'">
-    <div class="fg-icon">⚡</div>
-    <h2>Neon Legends</h2>
-    <p>AI-crafted idle RPG. Pull heroes, crush bosses, climb towers, join guilds. Our flagship title with 10+ updates from our AI team.</p>
-    <div class="stats"><span>▶ Play Now</span><span>v1.4.0</span><span>10 updates</span><span>Idle RPG</span></div>
+  <div class="featured-main" id="featuredMain" onclick="">
+    <div class="fg-icon" id="featuredIcon">⚡</div>
+    <h2 id="featuredTitle">Neon Legends</h2>
+    <p id="featuredDesc">AI-crafted idle RPG. Pull heroes, crush bosses, climb towers, join guilds.</p>
+    <div class="stats" id="featuredStats"><span>▶ Play Now</span><span>Idle RPG</span></div>
   </div>
-  <div class="featured-side">
-    <div class="fs-card" onclick="location.href='/games/glitchfront'">
-      <div class="fs-icon">🔫</div>
-      <div class="fs-info"><h3>Glitchfront 194x</h3><span>FPS · WebGL</span></div>
-    </div>
-    <div class="fs-card" onclick="location.href='/games/helix-hex'">
-      <div class="fs-icon">🌀</div>
-      <div class="fs-info"><h3>Helix Hex</h3><span>Strategy · Turn-Based</span></div>
-    </div>
-    <div class="fs-card" onclick="location.href='/games/crown-chaser'">
-      <div class="fs-icon">👑</div>
-      <div class="fs-info"><h3>Crown Chaser</h3><span>Arena · Survival</span></div>
-    </div>
-  </div>
+  <div class="featured-side" id="featuredSide"></div>
 </div>
 
 <!-- Categories -->
@@ -134,6 +128,7 @@
 <div class="bottom">© 2026 By JTT Game Studios</div>
 </footer>
 
+<script src="/games/games-core.js"></script>
 <script>
 const ALL_GAMES = [
   {id:'neon-legends',title:'Neon Legends',icon:'⚡',tags:['Idle RPG','Gacha','AI Crafted'],desc:'Idle RPG with heroes, bosses, towers',status:'playable',link:'/games/neon-legends'},
@@ -161,6 +156,40 @@ function renderGrid(containerId, games) {
 renderGrid('popularGrid', ALL_GAMES.filter(g => g.status === 'playable' || g.id === 'neon-legends'));
 renderGrid('recentGrid', ALL_GAMES.filter(g => g.status === 'new'));
 renderGrid('allGamesGrid', ALL_GAMES);
+
+// Search filter
+function filterGames(query) {
+  const q = query.toLowerCase().trim();
+  document.querySelectorAll('#allGamesGrid .card').forEach(card => {
+    const text = card.textContent.toLowerCase();
+    card.style.display = !q || text.includes(q) ? '' : 'none';
+  });
+}
+
+// Play stats
+if (typeof renderGameStats === 'function') renderGameStats('gameStats');
+
+// Featured carousel
+const featuredGames = ALL_GAMES.filter(g => g.id !== 'vibegame');
+let featuredIdx = 0;
+function showFeatured(i) {
+  const g = featuredGames[i];
+  document.getElementById('featuredIcon').textContent = g.icon;
+  document.getElementById('featuredTitle').textContent = g.title;
+  document.getElementById('featuredDesc').textContent = g.desc;
+  document.getElementById('featuredStats').innerHTML = '<span>▶ Play Now</span>' + g.tags.slice(0,2).map(t => '<span>'+t+'</span>').join('');
+  document.getElementById('featuredMain').onclick = () => location.href = g.link;
+  // Side thumbnails
+  const side = document.getElementById('featuredSide');
+  side.innerHTML = featuredGames.filter((_,idx) => idx !== i).slice(0,3).map(g2 => `
+    <div class="fs-card" onclick="location.href='${g2.link}'">
+      <div class="fs-icon">${g2.icon}</div>
+      <div class="fs-info"><h3>${g2.title}</h3><span>${g2.tags[0]}</span></div>
+    </div>
+  `).join('');
+}
+showFeatured(0);
+setInterval(() => { featuredIdx = (featuredIdx + 1) % featuredGames.length; showFeatured(featuredIdx); }, 8000);
 </script>
 </body>
 </html>
