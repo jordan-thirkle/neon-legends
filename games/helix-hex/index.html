@@ -85,6 +85,7 @@ footer a{color:#7c3aed;text-decoration:none}
       <button class="play-btn" id="endTurnBtn" style="margin-top:10px;width:100%;font-size:13px;padding:8px">END TURN</button>
     </div>
   </div>
+  <div id="leaderboard" style="max-width:300px;margin:12px auto"></div>
   <div class="more-games">
     <h3>🎮 More Games</h3>
     <div class="game-cards">
@@ -398,14 +399,22 @@ function checkWin(){
   if(pCount===0){gameOver=true;winner='AI';}
   else if(aiCount===0){gameOver=true;winner='Player';}
   if(gameOver){
+    if(winner==='Player'){
+      const s=countStats();
+      submitScore('helix-hex', s.aiHex);
+    }
+    renderLeaderboard('helix-hex', 'leaderboard');
     setTimeout(()=>{
       startOverlay.innerHTML=`
         <h2>${winner==='Player'?'🏆 VICTORY':'💀 DEFEAT'}</h2>
         <p>${winner==='Player'?'You conquered the board!':'The AI overwhelmed you.'}</p>
         <button class="play-btn" id="restartBtn">▶ PLAY AGAIN</button>
+        ${winner==='Player'?'<button class="play-btn" id="shareBtn" style="font-size:12px;padding:8px 20px;margin-top:4px">𝕏 Share Score</button>':''}
       `;
       startOverlay.style.display='flex';
       document.getElementById('restartBtn').addEventListener('click',()=>{resetGame();startGame();});
+      const shareBtn=document.getElementById('shareBtn');
+      if(shareBtn) shareBtn.addEventListener('click',()=>{shareOnX('helix-hex',countStats().aiHex);});
     },400);
   }
 }

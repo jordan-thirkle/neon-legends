@@ -74,6 +74,7 @@ footer a{color:#7c3aed;text-decoration:none}
       <div class="r"><span class="score">👑 <span id="scoreVal">0</span></span></div>
     </div>
   </div>
+  <div id="leaderboard" style="max-width:300px;margin:12px auto"></div>
   <div class="more-games">
     <h3>🎮 More Games</h3>
     <div class="game-cards">
@@ -381,16 +382,20 @@ function draw(){
 function gameOver(){
   isPlaying=false;
   hud.classList.remove('show');
+  submitScore('crown-chaser', score);
+  renderLeaderboard('crown-chaser', 'leaderboard');
   startOverlay.innerHTML=`
     <h2>💀 ELIMINATED</h2>
     <p>Crowns: ${score} · Wave ${wave}</p>
     <button class="play-btn" id="restartBtn">▶ PLAY AGAIN</button>
+    <button class="play-btn" id="shareBtn" style="font-size:12px;padding:8px 20px;margin-top:4px">𝕏 Share Score</button>
   `;
   startOverlay.style.display='flex';
   document.getElementById('restartBtn').addEventListener('click',()=>{
     resetGame();
     startGame();
   });
+  document.getElementById('shareBtn').addEventListener('click',()=>{shareOnX('crown-chaser',score);});
 }
 
 function resetGame(){

@@ -85,10 +85,12 @@ footer a{color:#7c3aed;text-decoration:none}
       <h4 style="margin-top:10px">🛒 Upgrades</h4>
       <div id="upgradeList"></div>
       <button class="play-btn" id="sellBtn" style="margin-top:8px;width:100%;font-size:13px;padding:8px">SELL ALL ORE</button>
+      <button class="play-btn" id="shareBtn" style="margin-top:4px;width:100%;font-size:11px;padding:6px">𝕏 Share Progress</button>
       <h4 style="margin-top:10px">📦 Inventory</h4>
       <div id="inventoryList"></div>
     </div>
   </div>
+  <div id="leaderboard" style="max-width:300px;margin:12px auto"></div>
   <div class="more-games">
     <h3>🎮 More Games</h3>
     <div class="game-cards">
@@ -119,6 +121,7 @@ const CELL=W/COLS;
 
 let cave=[];
 let gold=0;
+let totalEarned=0;
 let depth=0;
 let pickPower=1;
 let autoMine=0;
@@ -199,9 +202,12 @@ function sellAll(){
   }
   if(total>0){
     gold+=total;
+    totalEarned+=total;
     inventory={};
     updateInventory();
     updateUI();
+    submitScore('aura-depths', totalEarned);
+    renderLeaderboard('aura-depths', 'leaderboard');
   }
 }
 
@@ -361,7 +367,7 @@ function gameLoop(timestamp){
 function startGame(){
   isPlaying=true;
   startOverlay.style.display='none';
-  gold=0;depth=0;pickPower=1;autoMine=0;inventory={};
+  gold=0;depth=0;pickPower=1;autoMine=0;inventory={};totalEarned=0;
   Object.keys(purchased).forEach(k=>delete purchased[k]);
   generateCave();
   updateUI();
@@ -385,6 +391,7 @@ canvas.addEventListener('click',e=>{
 });
 
 document.getElementById('sellBtn').addEventListener('click',()=>{if(isPlaying)sellAll();updateUI();});
+document.getElementById('shareBtn').addEventListener('click',()=>{shareOnX('aura-depths',totalEarned);});
 playBtn.addEventListener('click',startGame);
 
 window.addEventListener('resize',()=>{

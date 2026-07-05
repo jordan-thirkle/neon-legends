@@ -88,6 +88,7 @@ footer a{color:#7c3aed;text-decoration:none}
       <div class="chat-log" id="chatLog"><div>Welcome to Aethoria!</div></div>
     </div>
   </div>
+  <div id="leaderboard" style="max-width:300px;margin:12px auto"></div>
   <div class="more-games">
     <h3>🎮 More Games</h3>
     <div class="game-cards">
@@ -325,10 +326,13 @@ function draw(){
 
 function gameOver(){
   isPlaying=false;
+  submitScore('aethoria', player.lvl * 100 + player.gold);
+  renderLeaderboard('aethoria', 'leaderboard');
   startOverlay.innerHTML=`
     <h2>💀 VANQUISHED</h2>
     <p>Level ${player.lvl} · Gold: ${player.gold}</p>
     <button class="play-btn" id="restartBtn">▶ REBIRTH</button>
+    <button class="play-btn" id="shareBtn" style="font-size:12px;padding:8px 20px;margin-top:4px">𝕏 Share Score</button>
   `;
   startOverlay.style.display='flex';
   document.getElementById('restartBtn').addEventListener('click',()=>{
@@ -338,6 +342,7 @@ function gameOver(){
     chatLog=['Welcome to Aethoria!'];
     startGame();
   });
+  document.getElementById('shareBtn').addEventListener('click',()=>{shareOnX('aethoria',player.lvl * 100 + player.gold);});
 }
 
 function startGame(){
