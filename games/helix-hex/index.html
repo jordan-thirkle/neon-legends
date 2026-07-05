@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Helix Hex - A hex-based strategy game. Capture territory, deploy units, and outsmart the AI.">
+<meta property="og:title" content="Helix Hex">
+<meta property="og:description" content="Hex-based strategy. Place units, capture territory, take turns vs AI.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://games.byjtt.com/helix-hex">
+<title>Helix Hex — games.byjtt.com</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#06030f;color:#e0d0ff;font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column}
+nav{background:rgba(124,58,237,0.12);backdrop-filter:blur(12px);padding:14px 32px;display:flex;align-items:center;gap:24px;border-bottom:1px solid rgba(124,58,237,0.25)}
+nav a{color:#b59aff;text-decoration:none;font-size:14px;font-weight:600;transition:color .2s}
+nav a:hover{color:#fff}
+nav .logo{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.3px}
+nav .logo span{color:#7c3aed}
+.container{flex:1;display:flex;flex-direction:column;align-items:center;padding:20px}
+.game-header{text-align:center;margin-bottom:16px}
+.game-header h1{font-size:28px;font-weight:800;background:linear-gradient(135deg,#7c3aed,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.game-header p{color:#9a8bb5;font-size:14px;margin-top:4px}
+.controls-badge{display:inline-flex;gap:18px;margin-top:8px;font-size:12px;color:#7c3aed}
+.controls-badge kbd{background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.3);border-radius:4px;padding:2px 7px;font-family:inherit;font-size:11px;color:#c4b5fd}
+.game-area{display:flex;gap:16px;max-width:860px;width:100%;flex-wrap:wrap;justify-content:center}
+#game-canvas{width:600px;max-width:100%;aspect-ratio:1;background:#0a0418;border-radius:12px;border:1px solid rgba(124,58,237,0.2);position:relative;overflow:hidden;flex-shrink:0}
+#game-canvas canvas{display:block;width:100%;height:100%}
+#start-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(6,3,15,0.85);z-index:10;border-radius:12px;gap:16px}
+#start-overlay h2{font-size:22px;font-weight:700;color:#fff}
+#start-overlay p{color:#9a8bb5;font-size:13px;max-width:320px;text-align:center}
+.play-btn{background:#7c3aed;color:#fff;border:none;padding:12px 40px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .2s;font-family:'Inter',sans-serif}
+.play-btn:hover{transform:scale(1.04);box-shadow:0 0 24px rgba(124,58,237,0.4)}
+.side-panel{background:rgba(124,58,237,0.04);border:1px solid rgba(124,58,237,0.1);border-radius:10px;padding:14px;min-width:170px;flex:1;font-size:13px}
+.side-panel h4{color:#7c3aed;font-size:12px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.side-panel .stat{display:flex;justify-content:space-between;padding:3px 0;font-size:12px}
+.side-panel .stat .val{color:#c4b5fd;font-weight:600}
+.turn-indicator{padding:8px 12px;border-radius:6px;text-align:center;font-weight:700;font-size:13px;margin-bottom:8px}
+.turn-player{background:rgba(124,58,237,0.15);color:#7c3aed}
+.turn-ai{background:rgba(239,68,68,0.15);color:#ef4444}
+.more-games{width:100%;max-width:860px;margin:24px auto 0;padding-top:20px;border-top:1px solid rgba(124,58,237,0.12)}
+.more-games h3{font-size:13px;font-weight:600;color:#7c3aed;text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.game-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.game-card{background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.1);border-radius:8px;padding:10px 12px;text-decoration:none;transition:all .2s}
+.game-card:hover{background:rgba(124,58,237,0.12);border-color:#7c3aed;transform:translateY(-2px)}
+.game-card .title{color:#c4b5fd;font-size:12px;font-weight:700}
+.game-card .sub{color:#7c3aed;font-size:10px;margin-top:2px}
+footer{margin-top:32px;padding:20px;text-align:center;font-size:12px;color:#4a3a6a}
+footer a{color:#7c3aed;text-decoration:none}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/games" class="logo">games.<span>byjtt</span>.com</a>
+  <a href="/games">← Home</a>
+</nav>
+<div class="container">
+  <div class="game-header">
+    <h1>Helix Hex</h1>
+    <p>Hex-based strategy — capture territory, deploy units, conquer the board.</p>
+    <div class="controls-badge">
+      <span><kbd>Click</kbd> Select / Place</span>
+      <span><kbd>End Turn</kbd> Button</span>
+    </div>
+  </div>
+  <div class="game-area">
+    <div id="game-canvas">
+      <div id="start-overlay">
+        <h2>⬡ HELIX HEX</h2>
+        <p>Outmaneuver the AI on a glowing hex grid. Capture territories and win the war.</p>
+        <button class="play-btn" id="playBtn">▶ DEPLOY ARMY</button>
+      </div>
+    </div>
+    <div class="side-panel">
+      <div id="turnIndicator" class="turn-indicator turn-player">YOUR TURN</div>
+      <h4>📊 Stats</h4>
+      <div class="stat"><span>Player Hexes</span><span class="val" id="pHexVal">0</span></div>
+      <div class="stat"><span>AI Hexes</span><span class="val" id="aiHexVal">0</span></div>
+      <div class="stat"><span>Player Units</span><span class="val" id="pUnitsVal">0</span></div>
+      <div class="stat"><span>AI Units</span><span class="val" id="aiUnitsVal">0</span></div>
+      <h4 style="margin-top:10px">🎯 Controls</h4>
+      <p style="font-size:11px;color:#9a8bb5">Click a friendly hex to select it, then click an adjacent enemy/empty hex to <b>attack</b> or <b>move</b>.</p>
+      <button class="play-btn" id="endTurnBtn" style="margin-top:10px;width:100%;font-size:13px;padding:8px">END TURN</button>
+    </div>
+  </div>
+  <div class="more-games">
+    <h3>🎮 More Games</h3>
+    <div class="game-cards">
+      <a href="/games/glitchfront" class="game-card"><div class="title">Glitchfront 194x</div><div class="sub">FPS</div></a>
+      <a href="/games/aethoria" class="game-card"><div class="title">Aethoria Online</div><div class="sub">MMORPG</div></a>
+      <a href="/games/aura-depths" class="game-card"><div class="title">Aura Depths</div><div class="sub">Mining</div></a>
+      <a href="/games/crown-chaser" class="game-card"><div class="title">Crown Chaser</div><div class="sub">Arena</div></a>
+      <a href="/games/vibegame" class="game-card"><div class="title">VibeGame</div><div class="sub">Experimental</div></a>
+    </div>
+  </div>
+</div>
+<footer><a href="https://games.byjtt.com">games.byjtt.com</a> · Studio Portal</footer>
+
+<script>
+(function(){
+const canvas=document.createElement('canvas');
+const ctx=canvas.getContext('2d');
+const wrap=document.getElementById('game-canvas');
+const startOverlay=document.getElementById('start-overlay');
+const playBtn=document.getElementById('playBtn');
+const endTurnBtn=document.getElementById('endTurnBtn');
+wrap.appendChild(canvas);
+
+let W=600,H=600;
+canvas.width=W;canvas.height=H;
+
+const HEX_R=22;
+const COLS=9,ROWS=9;
+let grid=[];
+let turn='player'; // 'player' or 'ai'
+let selected=null;
+let gameOver=false;
+let winner=null;
+let isPlaying=false;
+
+function hexCenter(col,row){
+  const w=HEX_R*Math.sqrt(3);
+  const h=HEX_R*1.5;
+  const x=col*w+(row%2===0?0:w/2);
+  const y=row*h;
+  return {x:x+40,y:y+40};
+}
+
+function hexNeighbors(col,row){
+  const dirs=row%2===0
+    ?[[1,0],[0,-1],[-1,-1],[-1,0],[-1,1],[0,1]]
+    :[[1,0],[1,-1],[0,-1],[-1,0],[0,1],[1,1]];
+  const res=[];
+  for(const [dc,dr] of dirs){
+    const nc=col+dc,nr=row+dr;
+    if(nc>=0&&nc<COLS&&nr>=0&&nr<ROWS) res.push({c:nc,r:nr});
+  }
+  return res;
+}
+
+function initGrid(){
+  grid=[];
+  for(let r=0;r<ROWS;r++){
+    grid[r]=[];
+    for(let c=0;c<COLS;c++){
+      const dist=Math.hypot(c-COLS/2,r-ROWS/2);
+      let owner=null,units=0;
+      if(dist<2.5){
+        owner='player';units=2;
+      }else if(dist>COLS/2+1&&r<ROWS/2+1&&r>ROWS/2-2){
+        owner='ai';units=2;
+      }else{
+        owner=null;units=0;
+      }
+      // ensure some neutral
+      if(owner&&Math.random()<0.2){owner=null;units=0;}
+      grid[r][c]={owner,units,col:c,row:r};
+    }
+  }
+  // guarantee player and ai have at least some hexes
+  if(!grid[1][1].owner){grid[1][1].owner='player';grid[1][1].units=2;}
+  if(!grid[ROWS-2][COLS-2].owner){grid[ROWS-2][COLS-2].owner='ai';grid[ROWS-2][COLS-2].units=2;}
+  grid[COLS-4][ROWS-2].owner='ai';grid[COLS-4][ROWS-2].units=2;
+  grid[3][1].owner='player';grid[3][1].units=2;
+  selected=null;
+  turn='player';
+  gameOver=false;
+  winner=null;
+}
+
+function countStats(){
+  let pHex=0,aiHex=0,pUnits=0,aiUnits=0;
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const h=grid[r][c];
+    if(h.owner==='player'){pHex++;pUnits+=h.units;}
+    if(h.owner==='ai'){aiHex++;aiUnits+=h.units;}
+  }
+  return {pHex,aiHex,pUnits,aiUnits};
+}
+
+function drawHex(cx,cy,r,owner,units,isSelected,isHighlight){
+  ctx.save();
+  ctx.translate(cx,cy);
+  // draw hex
+  ctx.beginPath();
+  for(let i=0;i<6;i++){
+    const angle=Math.PI/6+i*Math.PI/3;
+    const x=r*Math.cos(angle),y=r*Math.sin(angle);
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.closePath();
+  // fill
+  if(isHighlight){ctx.fillStyle='rgba(124,58,237,0.25)';}
+  else if(owner==='player'){ctx.fillStyle='rgba(124,58,237,0.15)';}
+  else if(owner==='ai'){ctx.fillStyle='rgba(239,68,68,0.15)';}
+  else{ctx.fillStyle='rgba(255,255,255,0.03)';}
+  ctx.fill();
+  // stroke
+  let strokeColor='rgba(124,58,237,0.2)';
+  if(isSelected)strokeColor='#7c3aed';
+  else if(owner==='player')strokeColor='rgba(124,58,237,0.5)';
+  else if(owner==='ai')strokeColor='rgba(239,68,68,0.5)';
+  ctx.strokeStyle=strokeColor;
+  ctx.lineWidth=isSelected?2.5:1;
+  ctx.stroke();
+  // units
+  if(units>0){
+    ctx.fillStyle=owner==='player'?'#7c3aed':'#ef4444';
+    ctx.font='bold 12px Inter';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(units,0,0);
+  }
+  ctx.restore();
+}
+
+function draw(){
+  ctx.fillStyle='#06030f';
+  ctx.fillRect(0,0,W,H);
+
+  // compute bounds to center
+  const allHexes=[];
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const pos=hexCenter(c,r);
+    allHexes.push(pos);
+  }
+  const minX=Math.min(...allHexes.map(p=>p.x-HEX_R));
+  const maxX=Math.max(...allHexes.map(p=>p.x+HEX_R));
+  const minY=Math.min(...allHexes.map(p=>p.y-HEX_R));
+  const maxY=Math.max(...allHexes.map(p=>p.y+HEX_R));
+  const scale=Math.min(W/(maxX-minX+20),H/(maxY-minY+20));
+  const offX=(W-(maxX+minX)*scale/2)/2;
+  const offY=(H-(maxY+minY)*scale/2)/2;
+
+  // determine highlight hexes (valid moves from selected)
+  const highlights=[];
+  if(selected&&turn==='player'){
+    const n=hexNeighbors(selected.c,selected.r);
+    for(const nb of n){
+      const h=grid[nb.r][nb.c];
+      if(!h.owner||h.owner!=='player')highlights.push(nb);
+    }
+  }
+
+  // draw hexes
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const h=grid[r][c];
+    const pos=hexCenter(c,r);
+    const sx=pos.x*scale+offX,sy=pos.y*scale+offY;
+    const sr=HEX_R*scale;
+    const isSel=selected&&selected.c===c&&selected.r===r;
+    const isHL=highlights.some(p=>p.c===c&&p.r===r);
+    drawHex(sx,sy,sr,h.owner,h.units,isSel,isHL);
+  }
+}
+
+function getHexFromClick(mx,my){
+  const allHexes=[];
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const pos=hexCenter(c,r);
+    allHexes.push({c,r,x:pos.x,y:pos.y});
+  }
+  const minX=Math.min(...allHexes.map(p=>p.x-HEX_R));
+  const maxX=Math.max(...allHexes.map(p=>p.x+HEX_R));
+  const minY=Math.min(...allHexes.map(p=>p.y-HEX_R));
+  const maxY=Math.max(...allHexes.map(p=>p.y+HEX_R));
+  const scale=Math.min(W/(maxX-minX+20),H/(maxY-minY+20));
+  const offX=(W-(maxX+minX)*scale/2)/2;
+  const offY=(H-(maxY+minY)*scale/2)/2;
+
+  for(const h of allHexes){
+    const sx=h.x*scale+offX,sy=h.y*scale+offY,sr=HEX_R*scale;
+    const d=Math.hypot(mx-sx,my-sy);
+    if(d<sr) return {c:h.c,r:h.r};
+  }
+  return null;
+}
+
+function doBattle(src,dst){
+  const s=grid[src.r][src.c];
+  const d=grid[dst.r][dst.c];
+  if(!s||s.owner!=='player'||s.units<1) return false;
+  if(d.owner==='player') return false; // can't attack own
+
+  const attackPower=s.units;
+  const defensePower=d.units+1;
+  if(attackPower>defensePower){
+    d.owner='player';
+    d.units=attackPower-defensePower;
+    s.units=0;
+  }else{
+    s.units=0;
+    d.units=defensePower-attackPower;
+  }
+  if(s.units===0) s.owner=null;
+  return true;
+}
+
+function aiTurn(){
+  // AI: simple greedy - attack weakest adjacent player hex or move to empty
+  const aiHexes=[];
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    if(grid[r][c].owner==='ai'&&grid[r][c].units>0) aiHexes.push({c,r});
+  }
+  // shuffle
+  for(let i=aiHexes.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [aiHexes[i],aiHexes[j]]=[aiHexes[j],aiHexes[i]];
+  }
+  let acted=false;
+  for(const src of aiHexes){
+    const s=grid[src.r][src.c];
+    const n=hexNeighbors(src.c,src.r);
+    // try to attack player hexes first
+    for(const nb of n){
+      const d=grid[nb.r][nb.c];
+      if(d.owner==='player'&&s.units>d.units){
+        const remaining=s.units-d.units-1;
+        d.owner='ai';
+        d.units=remaining>0?remaining:1;
+        s.units=0;
+        if(s.units===0) s.owner=null;
+        acted=true;
+        break;
+      }
+    }
+    if(acted) break;
+    // move to empty adjacent
+    for(const nb of n){
+      const d=grid[nb.r][nb.c];
+      if(!d.owner){
+        d.owner='ai';
+        d.units=Math.max(1,Math.floor(s.units/2));
+        s.units=Math.ceil(s.units/2);
+        acted=true;
+        break;
+      }
+    }
+    if(acted) break;
+    // reinforce nearest AI hex with fewer units
+    for(const nb of n){
+      const d=grid[nb.r][nb.c];
+      if(d.owner==='ai'&&d.units<s.units-1){
+        d.units++;
+        s.units--;
+        acted=true;
+        break;
+      }
+    }
+    if(acted) break;
+  }
+  // spawn new units for AI on owned hexes
+  const aiOwned=[];
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    if(grid[r][c].owner==='ai') aiOwned.push({c,r});
+  }
+  if(aiOwned.length>0&&Math.random()<0.6){
+    const h=aiOwned[Math.floor(Math.random()*aiOwned.length)];
+    grid[h.r][h.c].units++;
+  }
+}
+
+function endPlayerTurn(){
+  if(turn!=='player'||gameOver) return;
+  // spawn units for player
+  const pHexes=[];
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    if(grid[r][c].owner==='player') pHexes.push({c,r});
+  }
+  if(pHexes.length>0){
+    const h=pHexes[Math.floor(Math.random()*pHexes.length)];
+    grid[h.r][h.c].units++;
+  }
+  selected=null;
+  turn='ai';
+  updateUI();
+  draw();
+  // AI turn
+  setTimeout(()=>{
+    if(!isPlaying||gameOver) return;
+    aiTurn();
+    // check win condition
+    checkWin();
+    turn='player';
+    updateUI();
+    draw();
+  },600);
+}
+
+function checkWin(){
+  let pCount=0,aiCount=0;
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    if(grid[r][c].owner==='player')pCount++;
+    if(grid[r][c].owner==='ai')aiCount++;
+  }
+  if(pCount===0){gameOver=true;winner='AI';}
+  else if(aiCount===0){gameOver=true;winner='Player';}
+  if(gameOver){
+    setTimeout(()=>{
+      startOverlay.innerHTML=`
+        <h2>${winner==='Player'?'🏆 VICTORY':'💀 DEFEAT'}</h2>
+        <p>${winner==='Player'?'You conquered the board!':'The AI overwhelmed you.'}</p>
+        <button class="play-btn" id="restartBtn">▶ PLAY AGAIN</button>
+      `;
+      startOverlay.style.display='flex';
+      document.getElementById('restartBtn').addEventListener('click',()=>{resetGame();startGame();});
+    },400);
+  }
+}
+
+function updateUI(){
+  const s=countStats();
+  document.getElementById('pHexVal').textContent=s.pHex;
+  document.getElementById('aiHexVal').textContent=s.aiHex;
+  document.getElementById('pUnitsVal').textContent=s.pUnits;
+  document.getElementById('aiUnitsVal').textContent=s.aiUnits;
+  const ti=document.getElementById('turnIndicator');
+  if(turn==='player'){ti.textContent='YOUR TURN';ti.className='turn-indicator turn-player';}
+  else{ti.textContent='AI TURN...';ti.className='turn-indicator turn-ai';}
+}
+
+function resetGame(){
+  initGrid();
+  selected=null;
+  gameOver=false;
+  winner=null;
+  turn='player';
+  updateUI();
+  draw();
+}
+
+function startGame(){
+  isPlaying=true;
+  startOverlay.style.display='none';
+  resetGame();
+}
+
+// mouse
+canvas.addEventListener('click',e=>{
+  if(!isPlaying||gameOver) return;
+  if(turn!=='player') return;
+  const rect=canvas.getBoundingClientRect();
+  const mx=(e.clientX-rect.left)/rect.width*W;
+  const my=(e.clientY-rect.top)/rect.height*H;
+  const hex=getHexFromClick(mx,my);
+  if(!hex) return;
+  const h=grid[hex.r][hex.c];
+
+  if(selected){
+    // check if clicked hex is adjacent to selected
+    const neighbors=hexNeighbors(selected.c,selected.r);
+    const isAdj=neighbors.some(n=>n.c===hex.c&&n.r===hex.r);
+    if(isAdj&&h.owner!=='player'){
+      doBattle(selected,hex);
+      selected=null;
+      updateUI();
+      draw();
+      checkWin();
+      return;
+    }
+    // select different friendly hex
+    if(h.owner==='player'&&h.units>0){
+      selected=hex;
+      draw();
+      return;
+    }
+    selected=null;
+    draw();
+  }else{
+    if(h.owner==='player'&&h.units>0){
+      selected=hex;
+      draw();
+    }
+  }
+});
+
+endTurnBtn.addEventListener('click',endPlayerTurn);
+playBtn.addEventListener('click',startGame);
+
+window.addEventListener('resize',()=>{
+  const rect=wrap.getBoundingClientRect();
+  canvas.style.width=rect.width+'px';
+  canvas.style.height=rect.width+'px';
+});
+
+initGrid();
+updateUI();
+draw();
+})();
+</script>
+</body>
+</html>

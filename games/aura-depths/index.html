@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Aura Depths - A mining clicker game. Dig deep, collect ores, sell for upgrades in a neon cave.">
+<meta property="og:title" content="Aura Depths">
+<meta property="og:description" content="Mining clicker. Click to mine, sell ores, buy upgrades, descend deeper.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://games.byjtt.com/aura-depths">
+<title>Aura Depths — games.byjtt.com</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#06030f;color:#e0d0ff;font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column}
+nav{background:rgba(124,58,237,0.12);backdrop-filter:blur(12px);padding:14px 32px;display:flex;align-items:center;gap:24px;border-bottom:1px solid rgba(124,58,237,0.25)}
+nav a{color:#b59aff;text-decoration:none;font-size:14px;font-weight:600;transition:color .2s}
+nav a:hover{color:#fff}
+nav .logo{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.3px}
+nav .logo span{color:#7c3aed}
+.container{flex:1;display:flex;flex-direction:column;align-items:center;padding:20px}
+.game-header{text-align:center;margin-bottom:16px}
+.game-header h1{font-size:28px;font-weight:800;background:linear-gradient(135deg,#7c3aed,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.game-header p{color:#9a8bb5;font-size:14px;margin-top:4px}
+.controls-badge{display:inline-flex;gap:18px;margin-top:8px;font-size:12px;color:#7c3aed}
+.controls-badge kbd{background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.3);border-radius:4px;padding:2px 7px;font-family:inherit;font-size:11px;color:#c4b5fd}
+.game-area{display:flex;gap:16px;max-width:860px;width:100%;flex-wrap:wrap;justify-content:center}
+#game-canvas{width:500px;max-width:100%;aspect-ratio:1;background:#0a0418;border-radius:12px;border:1px solid rgba(124,58,237,0.2);position:relative;overflow:hidden;flex-shrink:0}
+#game-canvas canvas{display:block;width:100%;height:100%}
+#start-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(6,3,15,0.85);z-index:10;border-radius:12px;gap:16px}
+#start-overlay h2{font-size:22px;font-weight:700;color:#fff}
+#start-overlay p{color:#9a8bb5;font-size:13px;max-width:320px;text-align:center}
+.play-btn{background:#7c3aed;color:#fff;border:none;padding:12px 40px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .2s;font-family:'Inter',sans-serif}
+.play-btn:hover{transform:scale(1.04);box-shadow:0 0 24px rgba(124,58,237,0.4)}
+.side-panel{background:rgba(124,58,237,0.04);border:1px solid rgba(124,58,237,0.1);border-radius:10px;padding:14px;min-width:200px;flex:1;font-size:13px}
+.side-panel h4{color:#7c3aed;font-size:12px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.side-panel .stat{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(124,58,237,0.06)}
+.side-panel .stat:last-child{border:none}
+.side-panel .val{color:#c4b5fd;font-weight:600}
+.upgrade-btn{display:block;width:100%;background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.2);color:#e0d0ff;padding:7px 10px;border-radius:6px;margin:4px 0;cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;transition:all .2s;text-align:left}
+.upgrade-btn:hover{background:rgba(124,58,237,0.25);border-color:#7c3aed}
+.upgrade-btn .cost{float:right;color:#f87171}
+.upgrade-btn.disabled{opacity:0.4;cursor:default}
+.upgrade-btn.disabled:hover{background:rgba(124,58,237,0.12);border-color:rgba(124,58,237,0.2)}
+.more-games{width:100%;max-width:860px;margin:24px auto 0;padding-top:20px;border-top:1px solid rgba(124,58,237,0.12)}
+.more-games h3{font-size:13px;font-weight:600;color:#7c3aed;text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.game-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.game-card{background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.1);border-radius:8px;padding:10px 12px;text-decoration:none;transition:all .2s}
+.game-card:hover{background:rgba(124,58,237,0.12);border-color:#7c3aed;transform:translateY(-2px)}
+.game-card .title{color:#c4b5fd;font-size:12px;font-weight:700}
+.game-card .sub{color:#7c3aed;font-size:10px;margin-top:2px}
+footer{margin-top:32px;padding:20px;text-align:center;font-size:12px;color:#4a3a6a}
+footer a{color:#7c3aed;text-decoration:none}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/games" class="logo">games.<span>byjtt</span>.com</a>
+  <a href="/games">← Home</a>
+</nav>
+<div class="container">
+  <div class="game-header">
+    <h1>Aura Depths</h1>
+    <p>Mine the neon caves. Sell ores. Buy upgrades. Descend into the abyss.</p>
+    <div class="controls-badge">
+      <span><kbd>Click</kbd> Mine Block</span>
+      <span><kbd>Sell</kbd> All Button</span>
+    </div>
+  </div>
+  <div class="game-area">
+    <div id="game-canvas">
+      <div id="start-overlay">
+        <h2>⛏️ AURA DEPTHS</h2>
+        <p>Click to mine. Sell what you find. Go deeper. The cave is alive with glowing ore.</p>
+        <button class="play-btn" id="playBtn">▶ DESCEND</button>
+      </div>
+    </div>
+    <div class="side-panel">
+      <h4>📊 Stats</h4>
+      <div class="stat"><span>Depth</span><span class="val" id="depthVal">0m</span></div>
+      <div class="stat"><span>Gold</span><span class="val" id="goldVal">0</span></div>
+      <div class="stat"><span>Pick Power</span><span class="val" id="powerVal">1</span></div>
+      <div class="stat"><span>Auto-mine</span><span class="val" id="autoVal">0/s</span></div>
+      <h4 style="margin-top:10px">🛒 Upgrades</h4>
+      <div id="upgradeList"></div>
+      <button class="play-btn" id="sellBtn" style="margin-top:8px;width:100%;font-size:13px;padding:8px">SELL ALL ORE</button>
+      <h4 style="margin-top:10px">📦 Inventory</h4>
+      <div id="inventoryList"></div>
+    </div>
+  </div>
+  <div class="more-games">
+    <h3>🎮 More Games</h3>
+    <div class="game-cards">
+      <a href="/games/glitchfront" class="game-card"><div class="title">Glitchfront 194x</div><div class="sub">FPS</div></a>
+      <a href="/games/aethoria" class="game-card"><div class="title">Aethoria Online</div><div class="sub">MMORPG</div></a>
+      <a href="/games/helix-hex" class="game-card"><div class="title">Helix Hex</div><div class="sub">Strategy</div></a>
+      <a href="/games/crown-chaser" class="game-card"><div class="title">Crown Chaser</div><div class="sub">Arena</div></a>
+      <a href="/games/vibegame" class="game-card"><div class="title">VibeGame</div><div class="sub">Experimental</div></a>
+    </div>
+  </div>
+</div>
+<footer><a href="https://games.byjtt.com">games.byjtt.com</a> · Studio Portal</footer>
+
+<script>
+(function(){
+const canvas=document.createElement('canvas');
+const ctx=canvas.getContext('2d');
+const wrap=document.getElementById('game-canvas');
+const startOverlay=document.getElementById('start-overlay');
+const playBtn=document.getElementById('playBtn');
+wrap.appendChild(canvas);
+
+let W=500,H=500;
+canvas.width=W;canvas.height=H;
+
+const COLS=10,ROWS=14;
+const CELL=W/COLS;
+
+let cave=[];
+let gold=0;
+let depth=0;
+let pickPower=1;
+let autoMine=0;
+let inventory={};
+let isPlaying=false;
+
+const ORE_TYPES={
+  crystal:{name:'Crystal',color:'#7c3aed',value:1+Math.floor(depth/20)},
+  ruby:{name:'Ruby',color:'#ef4444',value:3+Math.floor(depth/15)},
+  goldOre:{name:'Gold Ore',color:'#f59e0b',value:5+Math.floor(depth/10)},
+  emerald:{name:'Emerald',color:'#10b981',value:8+Math.floor(depth/8)},
+  voidstone:{name:'Voidstone',color:'#6366f1',value:12+Math.floor(depth/5)},
+  aether:{name:'Aether Crystal',color:'#ec4899',value:20+Math.floor(depth/4)},
+};
+
+const ORE_KEYS=Object.keys(ORE_TYPES);
+const ORES_BY_DEPTH=[
+  {min:0,max:50,ores:['crystal','ruby']},
+  {min:50,max:150,ores:['crystal','ruby','goldOre']},
+  {min:150,max:300,ores:['ruby','goldOre','emerald']},
+  {min:300,max:500,ores:['goldOre','emerald','voidstone']},
+  {min:500,max:800,ores:['emerald','voidstone','aether']},
+  {min:800,max:9999,ores:['voidstone','aether']},
+];
+
+const UPGRADES=[
+  {id:'pick1',name:'Stronger Pick',desc:'+1 mining power',cost:30,effect:()=>{pickPower++;}},
+  {id:'pick2',name:'Reinforced Pick',desc:'+2 mining power',cost:100,effect:()=>{pickPower+=2;}},
+  {id:'pick3',name:'Titanium Pick',desc:'+3 mining power',cost:300,effect:()=>{pickPower+=3;}},
+  {id:'auto1',name:'Auto-Tool',desc:'+1 auto-mine/s',cost:80,effect:()=>{autoMine+=1;}},
+  {id:'auto2',name:'Auto-Drill',desc:'+2 auto-mine/s',cost:250,effect:()=>{autoMine+=2;}},
+  {id:'auto3',name:'Auto-Rig',desc:'+3 auto-mine/s',cost:600,effect:()=>{autoMine+=3;}},
+  {id:'depth1',name:'Cave Descent',desc:'Gain +5 depth bonus',cost:150,effect:()=>{depth+=5;}},
+];
+const purchased={};
+
+function generateCave(){
+  cave=[];
+  for(let r=0;r<ROWS;r++){
+    cave[r]=[];
+    for(let c=0;c<COLS;c++){
+      // top layer always rock
+      if(r<2) {cave[r][c]='rock';continue;}
+      const oreChance=Math.min(0.7,0.2+depth/800);
+      if(Math.random()<oreChance){
+        // pick ore type based on depth
+        const tier=ORES_BY_DEPTH.find(t=>depth>=t.min&&depth<+t.max)||ORES_BY_DEPTH[ORES_BY_DEPTH.length-1];
+        const oreKey=tier.ores[Math.floor(Math.random()*tier.ores.length)];
+        cave[r][c]=oreKey;
+      }else{
+        cave[r][c]='rock';
+      }
+    }
+  }
+  // ensure some rock at bottom
+  for(let c=0;c<COLS;c++) if(cave[ROWS-1][c]==='rock') cave[ROWS-1][c]='rock';
+}
+
+function updateInventory(){
+  const invEl=document.getElementById('inventoryList');
+  const keys=Object.keys(inventory);
+  if(keys.length===0){invEl.innerHTML='<div style="color:#9a8bb5;font-size:12px">Empty</div>';return;}
+  invEl.innerHTML=keys.map(k=>{
+    const ore=ORE_TYPES[k];
+    return `<div class="inv-item" style="display:flex;justify-content:space-between;font-size:12px"><span style="color:${ore.color}">● ${ore.name}</span><span>x${inventory[k]}</span></div>`;
+  }).join('');
+}
+
+function sellAll(){
+  let total=0;
+  for(const key of Object.keys(inventory)){
+    const count=inventory[key];
+    const ore=ORE_TYPES[key];
+    if(count>0){
+      const value=ore.value;
+      total+=count*value;
+    }
+  }
+  if(total>0){
+    gold+=total;
+    inventory={};
+    updateInventory();
+    updateUI();
+  }
+}
+
+function mineBlock(row,col){
+  const cell=cave[row][col];
+  if(!cell||cell==='rock'){
+    cave[row][col]=null;
+    return false;
+  }
+  if(cell==='mined') return false;
+  // mine it
+  const ore=ORE_TYPES[cell];
+  if(!ore) return false;
+  cave[row][col]='mined';
+  inventory[cell]=(inventory[cell]||0)+1;
+  updateInventory();
+  return true;
+}
+
+function clickMine(mx,my){
+  const col=Math.floor(mx/CELL);
+  const row=Math.floor(my/CELL);
+  if(col<0||col>=COLS||row<0||row>=ROWS) return;
+  // mine multiple cells based on power
+  let mined=0,attempts=0;
+  for(let r=row;r<ROWS&&attempts<pickPower;r++){
+    for(let c=(r===row?col:0);c<COLS&&attempts<pickPower;c++){
+      if(cave[r][c]&&cave[r][c]!=='mined'&&cave[r][c]!=='rock'){
+        mineBlock(r,c);
+        mined++;
+      }
+      attempts++;
+    }
+  }
+  if(mined===0&&cave[row][col]==='rock'){
+    cave[row][col]=null;
+  }
+  draw();
+}
+
+function descend(){
+  depth+=10+Math.floor(Math.random()*10);
+  generateCave();
+  draw();
+  updateUI();
+}
+
+function draw(){
+  ctx.fillStyle='#06030f';
+  ctx.fillRect(0,0,W,H);
+
+  // depth visual gradient
+  const grad=ctx.createLinearGradient(0,0,0,H);
+  const alpha=Math.min(0.6,0.1+depth/2000);
+  grad.addColorStop(0,`rgba(10,4,24,${alpha})`);
+  grad.addColorStop(1,`rgba(0,0,0,${alpha+0.2})`);
+  ctx.fillStyle=grad;
+  ctx.fillRect(0,0,W,H);
+
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const x=c*CELL,y=r*CELL,sz=CELL-1;
+      const cell=cave[r][c];
+      if(!cell){
+        ctx.fillStyle='rgba(6,3,15,0.8)';
+        ctx.fillRect(x,y,sz,sz);
+      }else if(cell==='rock'){
+        ctx.fillStyle='#1a0a2e';
+        ctx.fillRect(x,y,sz,sz);
+        ctx.fillStyle='rgba(124,58,237,0.05)';
+        ctx.fillRect(x+2,y+2,sz-4,sz-4);
+      }else if(cell==='mined'){
+        ctx.fillStyle='rgba(124,58,237,0.05)';
+        ctx.fillRect(x,y,sz,sz);
+      }else{
+        const ore=ORE_TYPES[cell];
+        ctx.fillStyle=ore.color;
+        ctx.shadowColor=ore.color;
+        ctx.shadowBlur=10;
+        ctx.fillRect(x,y,sz,sz);
+        ctx.shadowBlur=0;
+        // glow inner
+        ctx.fillStyle='rgba(255,255,255,0.15)';
+        ctx.fillRect(x+4,y+4,sz-8,sz-8);
+      }
+    }
+  }
+
+  // depth indicator
+  ctx.fillStyle='rgba(124,58,237,0.5)';
+  ctx.font='11px Inter';
+  ctx.textAlign='center';
+  ctx.fillText(`▼ ${depth}m`,W/2,18);
+}
+
+function updateUI(){
+  document.getElementById('depthVal').textContent=depth+'m';
+  document.getElementById('goldVal').textContent=gold;
+  document.getElementById('powerVal').textContent=pickPower;
+  document.getElementById('autoVal').textContent=autoMine+'/s';
+  renderUpgrades();
+}
+
+function renderUpgrades(){
+  const el=document.getElementById('upgradeList');
+  el.innerHTML=UPGRADES.map(u=>{
+    const bought=purchased[u.id];
+    const canAfford=gold>=u.cost;
+    return `<button class="upgrade-btn${bought||!canAfford?' disabled':''}" data-id="${u.id}">
+      ${bought?'✅ ':''}${u.name} <span style="color:#9a8bb5;font-size:10px">${u.desc}</span>
+      <span class="cost">${bought?'OWNED':u.cost+'g'}</span>
+    </button>`;
+  }).join('');
+  el.querySelectorAll('.upgrade-btn:not(.disabled)').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const id=btn.dataset.id;
+      const upg=UPGRADES.find(u=>u.id===id);
+      if(!upg||purchased[id]||gold<upg.cost) return;
+      gold-=upg.cost;
+      purchased[id]=true;
+      upg.effect();
+      updateUI();
+      draw();
+    });
+  });
+}
+
+// auto-mine tick
+let autoTimer=0;
+function tick(dt){
+  if(!isPlaying) return;
+  autoTimer+=dt;
+  const interval=1/autoMine;
+  if(autoMine>0&&autoTimer>=interval){
+    autoTimer-=interval;
+    // mine a random visible ore
+    const ores=[];
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+      if(cave[r][c]&&cave[r][c]!=='rock'&&cave[r][c]!=='mined') ores.push({r,c});
+    }
+    if(ores.length>0){
+      const pick=ores[Math.floor(Math.random()*ores.length)];
+      mineBlock(pick.r,pick.c);
+      draw();
+      updateInventory();
+    }
+  }
+}
+
+function gameLoop(timestamp){
+  if(!isPlaying) return;
+  tick(0.05);
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+function startGame(){
+  isPlaying=true;
+  startOverlay.style.display='none';
+  gold=0;depth=0;pickPower=1;autoMine=0;inventory={};
+  Object.keys(purchased).forEach(k=>delete purchased[k]);
+  generateCave();
+  updateUI();
+  draw();
+  gameLoop();
+}
+
+// click to mine
+canvas.addEventListener('click',e=>{
+  if(!isPlaying) return;
+  const rect=canvas.getBoundingClientRect();
+  const mx=(e.clientX-rect.left)/rect.width*W;
+  const my=(e.clientY-rect.top)/rect.height*H;
+  clickMine(mx,my);
+  // if all visible ore mined, auto descend
+  let hasOre=false;
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    if(cave[r][c]&&cave[r][c]!=='rock'&&cave[r][c]!=='mined') hasOre=true;
+  }
+  if(!hasOre) descend();
+});
+
+document.getElementById('sellBtn').addEventListener('click',()=>{if(isPlaying)sellAll();updateUI();});
+playBtn.addEventListener('click',startGame);
+
+window.addEventListener('resize',()=>{
+  const rect=wrap.getBoundingClientRect();
+  canvas.style.width=rect.width+'px';
+  canvas.style.height=rect.width+'px';
+});
+
+generateCave();
+updateUI();
+draw();
+})();
+</script>
+</body>
+</html>

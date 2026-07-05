@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="VibeGame - An experimental creative sandbox. Click to place colorful blocks with physics.">
+<meta property="og:title" content="VibeGame">
+<meta property="og:description" content="Creative sandbox. Click to place colored blocks, watch physics, express yourself.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://games.byjtt.com/vibegame">
+<title>VibeGame — games.byjtt.com</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#06030f;color:#e0d0ff;font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column}
+nav{background:rgba(124,58,237,0.12);backdrop-filter:blur(12px);padding:14px 32px;display:flex;align-items:center;gap:24px;border-bottom:1px solid rgba(124,58,237,0.25)}
+nav a{color:#b59aff;text-decoration:none;font-size:14px;font-weight:600;transition:color .2s}
+nav a:hover{color:#fff}
+nav .logo{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.3px}
+nav .logo span{color:#7c3aed}
+.container{flex:1;display:flex;flex-direction:column;align-items:center;padding:20px}
+.game-header{text-align:center;margin-bottom:16px}
+.game-header h1{font-size:28px;font-weight:800;background:linear-gradient(135deg,#7c3aed,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.game-header p{color:#9a8bb5;font-size:14px;margin-top:4px}
+.controls-badge{display:inline-flex;gap:18px;margin-top:8px;font-size:12px;color:#7c3aed}
+.controls-badge kbd{background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.3);border-radius:4px;padding:2px 7px;font-family:inherit;font-size:11px;color:#c4b5fd}
+#game-canvas{width:700px;max-width:100%;aspect-ratio:1;background:#0a0418;border-radius:12px;border:1px solid rgba(124,58,237,0.2);position:relative;overflow:hidden}
+#game-canvas canvas{display:block;width:100%;height:100%}
+#start-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(6,3,15,0.85);z-index:10;border-radius:12px;gap:16px}
+#start-overlay h2{font-size:22px;font-weight:700;color:#fff}
+#start-overlay p{color:#9a8bb5;font-size:13px;max-width:320px;text-align:center}
+.play-btn{background:#7c3aed;color:#fff;border:none;padding:12px 40px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .2s;font-family:'Inter',sans-serif}
+.play-btn:hover{transform:scale(1.04);box-shadow:0 0 24px rgba(124,58,237,0.4)}
+.toolbar{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:5;opacity:0;transition:opacity .3s;pointer-events:none}
+.toolbar.show{opacity:1;pointer-events:auto}
+.toolbar button{width:32px;height:32px;border:2px solid rgba(124,58,237,0.2);border-radius:6px;cursor:pointer;transition:all .2s}
+.toolbar button:hover{transform:scale(1.15)}
+.toolbar button.active{border-color:#7c3aed;box-shadow:0 0 12px rgba(124,58,237,0.4)}
+.info-overlay{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:5;font-size:11px;color:#9a8bb5;opacity:0;transition:opacity .3s;text-align:center;pointer-events:none}
+.info-overlay.show{opacity:1}
+.more-games{width:100%;max-width:760px;margin:24px auto 0;padding-top:20px;border-top:1px solid rgba(124,58,237,0.12)}
+.more-games h3{font-size:13px;font-weight:600;color:#7c3aed;text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.game-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.game-card{background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.1);border-radius:8px;padding:10px 12px;text-decoration:none;transition:all .2s}
+.game-card:hover{background:rgba(124,58,237,0.12);border-color:#7c3aed;transform:translateY(-2px)}
+.game-card .title{color:#c4b5fd;font-size:12px;font-weight:700}
+.game-card .sub{color:#7c3aed;font-size:10px;margin-top:2px}
+footer{margin-top:32px;padding:20px;text-align:center;font-size:12px;color:#4a3a6a}
+footer a{color:#7c3aed;text-decoration:none}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/games" class="logo">games.<span>byjtt</span>.com</a>
+  <a href="/games">← Home</a>
+</nav>
+<div class="container">
+  <div class="game-header">
+    <h1>VibeGame</h1>
+    <p>Creative sandbox — place colorful blocks, watch physics, make art.</p>
+    <div class="controls-badge">
+      <span><kbd>Click</kbd> Place Block</span>
+      <span><kbd>1-8</kbd> Color</span>
+      <span><kbd>C</kbd> Clear</span>
+    </div>
+  </div>
+  <div id="game-canvas">
+    <div id="start-overlay">
+      <h2>🎨 VIBEGAME</h2>
+      <p>Click anywhere to place glowing blocks. Watch them fall, bounce, and pile up. No goals — just vibes.</p>
+      <button class="play-btn" id="playBtn">▶ ENTER SANDBOX</button>
+    </div>
+    <div class="info-overlay" id="infoOverlay">🌈 Click to place blocks · 1-8 colors · C to clear</div>
+    <div class="toolbar" id="toolbar">
+      <button style="background:#ef4444" data-color="#ef4444"></button>
+      <button style="background:#f97316" data-color="#f97316"></button>
+      <button style="background:#f59e0b" data-color="#f59e0b"></button>
+      <button style="background:#10b981" data-color="#10b981"></button>
+      <button style="background:#3b82f6" data-color="#3b82f6"></button>
+      <button style="background:#7c3aed" data-color="#7c3aed"></button>
+      <button style="background:#ec4899" data-color="#ec4899"></button>
+      <button style="background:#fff" data-color="#ffffff"></button>
+    </div>
+  </div>
+  <div class="more-games">
+    <h3>🎮 More Games</h3>
+    <div class="game-cards">
+      <a href="/games/glitchfront" class="game-card"><div class="title">Glitchfront 194x</div><div class="sub">FPS</div></a>
+      <a href="/games/aethoria" class="game-card"><div class="title">Aethoria Online</div><div class="sub">MMORPG</div></a>
+      <a href="/games/helix-hex" class="game-card"><div class="title">Helix Hex</div><div class="sub">Strategy</div></a>
+      <a href="/games/aura-depths" class="game-card"><div class="title">Aura Depths</div><div class="sub">Mining</div></a>
+      <a href="/games/crown-chaser" class="game-card"><div class="title">Crown Chaser</div><div class="sub">Arena</div></a>
+    </div>
+  </div>
+</div>
+<footer><a href="https://games.byjtt.com">games.byjtt.com</a> · Studio Portal</footer>
+
+<script>
+(function(){
+const canvas=document.createElement('canvas');
+const ctx=canvas.getContext('2d');
+const wrap=document.getElementById('game-canvas');
+const startOverlay=document.getElementById('start-overlay');
+const playBtn=document.getElementById('playBtn');
+const toolbar=document.getElementById('toolbar');
+const infoOverlay=document.getElementById('infoOverlay');
+wrap.appendChild(canvas);
+
+let W=700,H=700;
+canvas.width=W;canvas.height=H;
+
+const GRAVITY=0.35;
+const FRICTION=0.98;
+const BOUNCE=0.45;
+const BLOCK_SIZE=16;
+const MAX_BLOCKS=600;
+
+let blocks=[];
+let selectedColor='#7c3aed';
+let isPlaying=false;
+let mouseDown=false;
+let placeTimer=0;
+
+const COLORS=['#ef4444','#f97316','#f59e0b','#10b981','#3b82f6','#7c3aed','#ec4899','#ffffff'];
+
+function createBlock(x,y,color,size){
+  if(blocks.length>=MAX_BLOCKS) return;
+  blocks.push({
+    x,y,
+    vx:(Math.random()-0.5)*0.5,
+    vy:Math.random()*-1,
+    w:size||BLOCK_SIZE,
+    h:size||BLOCK_SIZE,
+    color:color||selectedColor,
+    life:0,
+    glow:Math.random()*Math.PI*2
+  });
+}
+
+function physics(){
+  for(let i=0;i<blocks.length;i++){
+    const b=blocks[i];
+    b.vy+=GRAVITY;
+    b.x+=b.vx;
+    b.y+=b.vy;
+    b.vx*=FRICTION;
+    b.life++;
+
+    // floor collision
+    if(b.y+b.h>H-10){
+      b.y=H-10-b.h;
+      b.vy*=-BOUNCE;
+      b.vx*=0.9;
+      if(Math.abs(b.vy)<0.3) b.vy=0;
+    }
+    // walls
+    if(b.x<0){b.x=0;b.vx*=-BOUNCE;}
+    if(b.x+b.w>W){b.x=W-b.w;b.vx*=-BOUNCE;}
+
+    // block-to-block collision (simplified)
+    for(let j=i+1;j<blocks.length;j++){
+      const a=blocks[j];
+      if(a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y){
+        // push apart
+        const overlapX=Math.min(b.x+b.w-a.x,a.x+a.w-b.x);
+        const overlapY=Math.min(b.y+b.h-a.y,a.y+a.h-b.y);
+        if(overlapX<overlapY){
+          const sign=b.x<a.x?-1:1;
+          b.x+=sign*overlapX*0.5;
+          a.x-=sign*overlapX*0.5;
+          const tmp=b.vx;b.vx=a.vx*0.5;a.vx=tmp*0.5;
+        }else{
+          const sign=b.y<a.y?-1:1;
+          b.y+=sign*overlapY*0.5;
+          a.y-=sign*overlapY*0.5;
+          const tmp=b.vy;b.vy=a.vy*0.3;a.vy=tmp*0.3;
+        }
+      }
+    }
+
+    b.glow+=0.05;
+  }
+}
+
+function draw(){
+  ctx.fillStyle='#06030f';
+  ctx.fillRect(0,0,W,H);
+
+  // subtle grid
+  ctx.strokeStyle='rgba(124,58,237,0.03)';
+  ctx.lineWidth=1;
+  for(let x=0;x<W;x+=32){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=32){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  // draw blocks
+  for(const b of blocks){
+    const pulse=Math.sin(b.glow)*0.15+0.85;
+    ctx.fillStyle=b.color;
+    ctx.shadowColor=b.color;
+    ctx.shadowBlur=8*pulse;
+    ctx.globalAlpha=0.9;
+
+    // rounded rect
+    const r=2;
+    ctx.beginPath();
+    ctx.moveTo(b.x+r,b.y);
+    ctx.lineTo(b.x+b.w-r,b.y);
+    ctx.quadraticCurveTo(b.x+b.w,b.y,b.x+b.w,b.y+r);
+    ctx.lineTo(b.x+b.w,b.y+b.h-r);
+    ctx.quadraticCurveTo(b.x+b.w,b.y+b.h,b.x+b.w-r,b.y+b.h);
+    ctx.lineTo(b.x+r,b.y+b.h);
+    ctx.quadraticCurveTo(b.x,b.y+b.h,b.x,b.y+b.h-r);
+    ctx.lineTo(b.x,b.y+r);
+    ctx.quadraticCurveTo(b.x,b.y,b.x+r,b.y);
+    ctx.closePath();
+    ctx.fill();
+
+    // inner glow
+    ctx.fillStyle='rgba(255,255,255,0.06)';
+    ctx.fillRect(b.x+2,b.y+2,b.w-4,b.h-4);
+    ctx.shadowBlur=0;
+    ctx.globalAlpha=1;
+  }
+
+  // particle count
+  ctx.fillStyle='rgba(124,58,237,0.3)';
+  ctx.font='11px Inter';
+  ctx.textAlign='right';
+  ctx.fillText(`${blocks.length}/${MAX_BLOCKS} blocks`,W-12,H-12);
+}
+
+function gameLoop(){
+  if(!isPlaying) return;
+  if(mouseDown){
+    placeTimer++;
+    if(placeTimer%2===0){
+      const rect=canvas.getBoundingClientRect();
+      // approximate mouse position from last event
+      if(lastMouseX!==undefined){
+        const mx=(lastMouseX-rect.left)/rect.width*W;
+        const my=(lastMouseY-rect.top)/rect.height*H;
+        createBlock(mx-BLOCK_SIZE/2,my-BLOCK_SIZE/2,selectedColor,BLOCK_SIZE+Math.random()*6-3);
+      }
+    }
+  }
+  physics();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+let lastMouseX,lastMouseY;
+
+canvas.addEventListener('mousedown',e=>{
+  if(!isPlaying) return;
+  mouseDown=true;
+  const rect=canvas.getBoundingClientRect();
+  lastMouseX=e.clientX;
+  lastMouseY=e.clientY;
+  const mx=(e.clientX-rect.left)/rect.width*W;
+  const my=(e.clientY-rect.top)/rect.height*H;
+  createBlock(mx-BLOCK_SIZE/2,my-BLOCK_SIZE/2,selectedColor,BLOCK_SIZE+Math.random()*6-3);
+  placeTimer=0;
+});
+
+canvas.addEventListener('mousemove',e=>{
+  lastMouseX=e.clientX;
+  lastMouseY=e.clientY;
+});
+
+document.addEventListener('mouseup',()=>{mouseDown=false;});
+
+canvas.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  if(!isPlaying) return;
+  const rect=canvas.getBoundingClientRect();
+  const touch=e.touches[0];
+  const mx=(touch.clientX-rect.left)/rect.width*W;
+  const my=(touch.clientY-rect.top)/rect.height*H;
+  mouseDown=true;
+  createBlock(mx-BLOCK_SIZE/2,my-BLOCK_SIZE/2,selectedColor,BLOCK_SIZE+Math.random()*6-3);
+});
+
+canvas.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(!isPlaying||!mouseDown) return;
+  const rect=canvas.getBoundingClientRect();
+  const touch=e.touches[0];
+  const mx=(touch.clientX-rect.left)/rect.width*W;
+  const my=(touch.clientY-rect.top)/rect.height*H;
+  if(placeTimer%2===0) createBlock(mx-BLOCK_SIZE/2,my-BLOCK_SIZE/2,selectedColor);
+  placeTimer++;
+});
+
+canvas.addEventListener('touchend',()=>{mouseDown=false;placeTimer=0;});
+
+// color toolbar
+toolbar.querySelectorAll('button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    toolbar.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedColor=btn.dataset.color;
+  });
+});
+toolbar.querySelector('button').classList.add('active');
+
+// keyboard shortcuts
+document.addEventListener('keydown',e=>{
+  const k=e.key;
+  if(k>='1'&&k<='8'){
+    const idx=parseInt(k)-1;
+    if(idx<COLORS.length){
+      selectedColor=COLORS[idx];
+      toolbar.querySelectorAll('button').forEach((b,i)=>{
+        b.classList.toggle('active',i===idx);
+      });
+    }
+  }
+  if(k==='c'||k==='C'){
+    blocks=[];
+  }
+});
+
+function startGame(){
+  isPlaying=true;
+  startOverlay.style.display='none';
+  toolbar.classList.add('show');
+  infoOverlay.classList.add('show');
+  gameLoop();
+}
+
+playBtn.addEventListener('click',startGame);
+
+window.addEventListener('resize',()=>{
+  const rect=wrap.getBoundingClientRect();
+  const s=Math.min(rect.width,700);
+  canvas.style.width=s+'px';
+  canvas.style.height=s+'px';
+});
+
+// initial blocks for demo
+for(let i=0;i<30;i++){
+  createBlock(
+    Math.random()*(W-40)+20,
+    Math.random()*(H-100)+20,
+    COLORS[Math.floor(Math.random()*COLORS.length)],
+    BLOCK_SIZE+Math.random()*6-3
+  );
+}
+draw();
+})();
+</script>
+</body>
+</html>
